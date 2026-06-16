@@ -1173,6 +1173,9 @@
         document.getElementById('activePlayingTeamTitle').innerText = `${profile.icon} חדר מצב - ${teamState.name}`;
 
         renderTeamKPIBars();
+
+        // סנכרון מיידי לענן — המנהל יראה את הצוות מרגע ההתחלה
+        syncTeamToCloud('active');
         
         gameTimeSeconds = 0;
         if(gameTimerInterval) clearInterval(gameTimerInterval);
@@ -1302,21 +1305,27 @@
         document.getElementById('teamActiveCrisisView').style.display = 'none';
         renderTeamKPIBars();
         showSystemNotification("החלטה בוצעה", `ההחלטה התקבלה בהצלחה! התקבל בונוס מהירות של ${timeBonus}+ נק'.`);
+
+        // סנכרון מיידי לענן — המנהל יראה את ההחלטה החדשה בזמן אמת
+        syncTeamToCloud('active');
     }
 
-    async function finishActiveTeamShift() {
-        if(gameTimerInterval) clearInterval(gameTimerInterval);
-        
-        let rawData = { 
-            teamId: teamState.teamId, 
-            name: teamState.name, 
+    // ===== סנכרון בזמן אמת לענן (נקרא בכל שינוי, לא רק בסיום) =====
+    async function syncTeamToCloud(status) {
+        if (!teamState) return;
+
+        let rawData = {
+            teamId: teamState.teamId,
+            name: teamState.name,
             icon: teamState.icon,
-            kpi: teamState.kpi, 
+            kpi: teamState.kpi,
             history: teamState.history,
             preventionKey: teamState.preventionKey,
             chosenPreventionName: teamState.chosenPreventionName,
             strategy: teamState.strategy,
-            recoveryPlan: teamState.recoveryPlan
+            recoveryPlan: teamState.recoveryPlan,
+            status: status,               // 'active' או 'finished'
+            lastUpdate: Date.now()
         };
 
         localStorage.setItem(`qc_result_team_${teamState.teamId}`, JSON.stringify(rawData));
@@ -1325,15 +1334,21 @@
             try {
                 const teamDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'results', String(teamState.teamId));
                 await setDoc(teamDocRef, rawData);
-                console.log(`☁️ Team ${teamState.teamId} uploaded to Firebase successfully`);
-                showSystemNotification("העלאה לענן", "התוצאות והאסטרטגיה שלכם הועלו בהצלחה לענן הכיתתי!");
+                console.log(`☁️ Team ${teamState.teamId} synced to cloud (${status})`);
             } catch (err) {
-                console.error("❌ Failed uploading data to Firestore:", err.code, err.message);
-                showSystemNotification("שגיאת ענן", "השמירה לענן נכשלה (" + (err.code || "שגיאה") + "). הנתונים נשמרו מקומית בלבד.", true);
+                console.error("❌ Cloud sync failed:", err.code, err.message);
             }
         } else {
-            console.warn("⚠️ Saved locally only — no cloud connection", { currentUser: !!currentUser, db: !!db });
+            console.warn("⚠️ Synced locally only — no cloud connection");
         }
+    }
+
+    async function finishActiveTeamShift() {
+        if(gameTimerInterval) clearInterval(gameTimerInterval);
+
+        // סנכרון סופי לענן עם סטטוס 'הושלם'
+        await syncTeamToCloud('finished');
+        showSystemNotification("העלאה לענן", "התוצאות הסופיות הועלו בהצלחה לענן הכיתתי!");
 
         document.getElementById('teamFinishedPanel').style.display = 'block';
         
@@ -1435,6 +1450,14 @@
 
                 let chosenPreventionText = data.chosenPreventionName || "ללא תוכנית מנע";
 
+                // תג סטטוס בזמן אמת
+                let statusBadge = '';
+                if (data.status === 'active') {
+                    statusBadge = `<span style="background:#fef3c7; color:#92400e; padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:bold;">🔴 משחק כעת</span>`;
+                } else if (data.status === 'finished') {
+                    statusBadge = `<span style="background:#d1fae5; color:#065f46; padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:bold;">✅ הסתיים</span>`;
+                }
+
                 let strategySnippet = data.strategy ? `
                     <div style="background:#fff9e6; border:1px solid #ffe899; padding:8px; border-radius:6px; margin:5px 0; font-size:0.8rem;">
                         <strong>🎯 אסטרטגיה:</strong> ${data.strategy.goal}<br>
@@ -1452,7 +1475,7 @@
                 grid.innerHTML += `
                     <div class="team-summary-box" style="border: 1px solid #cbd5e1; border-radius: 12px; padding: 15px; background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
                         <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-                            <h3 style="color:var(--dark-blue); font-size:1.15rem; margin:0;">${teamIcon} צוות ${i}: ${data.name.split(' ')[0]}</h3>
+                            <h3 style="color:var(--dark-blue); font-size:1.15rem; margin:0;">${teamIcon} צוות ${i}: ${data.name.split(' ')[0]} ${statusBadge}</h3>
                             <span class="badge ${preventionBadgeColor}">${chosenPreventionText}</span>
                         </div>
                         <hr style="margin:8px 0; border-color:#e2e8f0;">
