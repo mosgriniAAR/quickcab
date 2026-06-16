@@ -904,18 +904,24 @@
 
     // מאזין בזמן אמת לשינויים בענן
     function startLiveCloudSyncListener() {
-        if (!currentUser || !db) return;
+        if (!currentUser || !db) {
+            console.warn("⚠️ Listener not started — no user or db", { currentUser: !!currentUser, db: !!db });
+            return;
+        }
         
         const q = collection(db, 'artifacts', appId, 'public', 'data', 'results');
+        console.log("👂 Starting real-time listener on:", `artifacts/${appId}/public/data/results`);
         
         if (firebaseUnsubscribe) firebaseUnsubscribe();
 
         firebaseUnsubscribe = onSnapshot(q, (snapshot) => {
+            console.log(`📥 Firebase update received: ${snapshot.size} team(s) in cloud`);
             const activeDocIds = new Set();
             snapshot.forEach((doc) => {
                 const data = doc.data();
                 activeDocIds.add(String(data.teamId));
                 localStorage.setItem(`qc_result_team_${data.teamId}`, JSON.stringify(data));
+                console.log(`   ✓ Team ${data.teamId} (${data.name}) synced`);
             });
 
             for (let i = 1; i <= 8; i++) {
@@ -929,7 +935,7 @@
             }
             refreshAdminDatabaseStats();
         }, (error) => {
-            console.error("Cloud synchronization error:", error);
+            console.error("❌ Cloud synchronization error:", error.code, error.message);
         });
     }
 
@@ -1319,10 +1325,14 @@
             try {
                 const teamDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'results', String(teamState.teamId));
                 await setDoc(teamDocRef, rawData);
+                console.log(`☁️ Team ${teamState.teamId} uploaded to Firebase successfully`);
                 showSystemNotification("העלאה לענן", "התוצאות והאסטרטגיה שלכם הועלו בהצלחה לענן הכיתתי!");
             } catch (err) {
-                console.error("Failed uploading data to Firestore", err);
+                console.error("❌ Failed uploading data to Firestore:", err.code, err.message);
+                showSystemNotification("שגיאת ענן", "השמירה לענן נכשלה (" + (err.code || "שגיאה") + "). הנתונים נשמרו מקומית בלבד.", true);
             }
+        } else {
+            console.warn("⚠️ Saved locally only — no cloud connection", { currentUser: !!currentUser, db: !!db });
         }
 
         document.getElementById('teamFinishedPanel').style.display = 'block';
