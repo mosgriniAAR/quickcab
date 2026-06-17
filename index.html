@@ -182,6 +182,7 @@
         .bg-purple { background-color: var(--purple-holder); }
         .bg-blue { background-color: var(--blue-info); }
         .bg-secondary { background-color: #95a5a6; }
+        .bg-orange { background-color: #e67e22; }
 
         /* הגדרות פאנל מנהל */
         .admin-lock-screen {
@@ -707,12 +708,36 @@
                         <option value="CRM">🟢 מערכת CRM חכמה (חיזוק לקוחות ומניעת חרם) - [שביעות רצון לקוחות +10]</option>
                         <option value="ISO">🔵 תקינת איכות ISO (מניעת קריסת אלגוריתם שידוך) - [עמידה ב-SLA +10]</option>
                         <option value="SERVICE">🟣 סדנאות שירות ותמיכה (מניעת משברי תקשורת ושירות) - [מורל עובדים +10]</option>
+                        <option value="FINANCE">🟠 ניהול סיכונים פיננסי (הגנה מפני משברים כלכליים ותקציביים) - [רווחיות +10]</option>
+                        <option value="CYBER">🔴 מערך אבטחת מידע (הגנה מפני מתקפות סייבר ודליפות) - [אבטחה/רווחיות +10]</option>
                     </select>
                 </div>
 
                 <div style="text-align: left;">
-                    <button class="btn btn-success" style="font-size: 1.1rem; padding: 14px 28px;" onclick="validateAndStartGame()">💾 נעילת אסטרטגיה והפעלת משמרת פעילה 🚀</button>
+                    <button class="btn btn-success" style="font-size: 1.1rem; padding: 14px 28px;" onclick="validateAndStartGame()">🔒 נעילת אסטרטגיה</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- מסך המתנה למנחה (אחרי נעילת אסטרטגיה) -->
+        <div id="teamWaitingBlock" style="display: none; text-align: center; padding: 50px 20px; background: #fffaf0; border: 2px dashed var(--taxi-yellow); border-radius: 12px; margin-top: 20px;">
+            <div style="font-size: 4rem; margin-bottom: 15px;">⏳</div>
+            <h2 style="color: var(--dark-blue);">האסטרטגיה ננעלה בהצלחה!</h2>
+
+            <!-- הודעת המתנה למנחה (מצב מקוון) -->
+            <div id="waitingOnlineMsg">
+                <p style="font-size: 1.15rem; color: #555; margin-top: 12px;">ממתינים למנחה שיפעיל את המשמרת...</p>
+                <p style="font-size: 0.95rem; color: #888; margin-top: 8px;">המשמרת תתחיל אוטומטית ברגע שהמנחה ילחץ "הפעל משמרת" בלוח הניהול.</p>
+                <div style="margin-top: 20px;">
+                    <span style="display:inline-block; width:12px; height:12px; background:var(--green-success); border-radius:50%; animation: pulse 1.5s infinite;"></span>
+                </div>
+            </div>
+
+            <!-- כפתור התחלה ידנית (מצב לא מקוון בלבד) -->
+            <div id="waitingOfflineStart" style="display: none;">
+                <p style="font-size: 1.05rem; color: #555; margin-top: 12px;">מצב עבודה מקומי — אין חיבור לענן הכיתתי.</p>
+                <p style="font-size: 0.9rem; color: #888; margin: 8px 0 18px 0;">לחצו על הכפתור כדי להתחיל את המשמרת כשאתם מוכנים:</p>
+                <button class="btn btn-success" style="font-size: 1.15rem; padding: 14px 36px;" onclick="manualStartShift()">▶️ התחל משמרת</button>
             </div>
         </div>
 
@@ -746,6 +771,18 @@
 
                     <h4>🤔 בחרו חלופת פעולה באפליקציה:</h4>
                     <div class="options-list" id="teamCrisisOptionsContainer"></div>
+
+                    <!-- חלופה פתוחה (E) -->
+                    <div class="option-item" id="openOptionRow" style="border: 2px dashed var(--purple-holder); background: #fbf5ff;" onclick="document.getElementById('opt_E').checked = true; onCrisisOptionChange();">
+                        <input type="radio" name="crisisOptionSelectGroup" value="E" id="opt_E" onchange="onCrisisOptionChange()">
+                        <label style="cursor:pointer;" for="opt_E"><strong>✍️ חלופה פתוחה:</strong> נסחו פעולה משלכם</label>
+                    </div>
+                    <div id="openOptionFields" style="display:none; background:#faf5ff; border:1px solid #e9d5ff; border-radius:8px; padding:14px; margin-top:8px;">
+                        <label style="font-weight:bold; font-size:0.9rem;">📝 תארו את הפעולה שאתם מציעים:</label>
+                        <textarea id="openOptionText" class="input-control" rows="2" placeholder="לדוגמה: לכנס ישיבת חירום עם בעלי העניין ולגבש תוכנית תקשורת..."></textarea>
+                        <p style="font-size:0.85rem; color:#666; margin:10px 0 6px 0;">🎯 הערכת ההשפעה הצפויה של הפעולה על המדדים (בין 20- ל-20+):</p>
+                        <div id="openOptionImpactGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:8px;"></div>
+                    </div>
 
                     <div style="margin-top: 20px;">
                         <label><strong>📝 נימוק איכות ומערכת חובה (ISO 9001 - לפחות 10 תווים):</strong></label>
@@ -784,7 +821,7 @@
     <!-- ==================== 📚 דף הנחיות מורחב ומפורט ==================== -->
     <div id="guidelines_panel" class="view-panel active">
 
-        <div class="guidelines-header">
+        <div class="guidelines-header" id="guidelines_top">
             <h2>📚 מדריך QuickCab המלא והמקיף</h2>
             <p>הכל שצריך לדעת על המשחק — מהבסיס ועד לאסטרטגיות מתקדמות</p>
         </div>
@@ -864,30 +901,34 @@
                         <th>מטרה</th>
                     </tr>
                     <tr>
-                        <td><strong>הכנה</strong></td>
-                        <td>5-10 דקות</td>
-                        <td>בחירת קבוצה, תכנון אסטרטגיה, שלב 0</td>
-                        <td>הכנה מושלמת למשחק</td>
+                        <td><strong>הכנה ומחקר</strong></td>
+                        <td>15-25 דקות</td>
+                        <td>בחירת קבוצה, מחקר מעמיק, תכנון אסטרטגיה ושלב 0</td>
+                        <td>העמקה, חקר ותכנון מבוסס ISO 9001</td>
                     </tr>
                     <tr>
                         <td><strong>משחק פעיל</strong></td>
-                        <td>3 דקות</td>
+                        <td>גמיש (נקבע ע"י המנחה)</td>
                         <td>טיפול באירועים ייעודיים בזמן אמת</td>
                         <td>קבלת החלטות מהירות ונכונות</td>
                     </tr>
                     <tr>
                         <td><strong>סיכום</strong></td>
-                        <td>2-3 דקות</td>
+                        <td>3-5 דקות</td>
                         <td>צפייה בתוצאות והעלאה לענן</td>
                         <td>למידה מההחלטות</td>
                     </tr>
                     <tr>
                         <td><strong>דיון כיתתי</strong></td>
-                        <td>10-15 דקות</td>
-                        <td>המנחה מציג את כל הקבוצות</td>
-                        <td>השוואה ולמידה קולקטיבית</td>
+                        <td>20-30 דקות</td>
+                        <td>המנחה מציג את כל הקבוצות ומנחה דיון מעמיק</td>
+                        <td>השוואה, רפלקציה ולמידה קולקטיבית לעומק</td>
                     </tr>
                 </table>
+                <p style="margin-top: 12px; font-size: 0.9rem; color: #555;">
+                    💡 <strong>הערה:</strong> משך המשחק הפעיל גמיש לחלוטין — המנחה קובע אותו בפאנל הניהול (בין 10 ל-60 דקות),
+                    יחד עם תזמון האירועים והקצב ביניהם. זמני ההכנה והדיון הם המלצה ומותאמים לפי אורך השיעור.
+                </p>
             </div>
 
             <div class="guidelines-subsection">
@@ -1069,6 +1110,17 @@
         <div class="guidelines-section" id="g-strategy">
             <h3>📋 גיבוש אסטרטגיית ISO 9001 — המפתח להצלחה</h3>
 
+            <div class="guidelines-highlight">
+                <strong>🔎 שלב ההכנה הוא הלב של המשחק — קחו את הזמן והעמיקו:</strong><br>
+                לפני שמתחילים את המשמרת, הקדישו זמן למחקר אמיתי. אל תמהרו לבחור יעדים —
+                חקרו לעומק את האתגרים של הצוות שלכם:<br>
+                • מהם המדדים הקריטיים של הצוות ומה משפיע עליהם?<br>
+                • אילו סיכונים ומשברים הצוות שלכם עלול להתמודד איתם?<br>
+                • איך תקן ISO 9001 מתייחס לבעיות כאלה בעולם האמיתי?<br>
+                • מהי תוכנית ההבראה שתיתן את ההגנה הטובה ביותר על המדד הראשי שלכם?<br>
+                ככל שתעמיקו בהכנה — כך תקבלו החלטות טובות יותר תחת לחץ במהלך המשחק.
+            </div>
+
             <p>
                 <strong>ISO 9001</strong> הוא תקן בינלאומי לניהול איכות. במשחק, אתם חייבים לתעד את האסטרטגיה שלכם
                 בשלושה שדות ברורים:
@@ -1204,6 +1256,20 @@
                         <td>Drivers, Service</td>
                     </tr>
                     <tr>
+                        <td><strong>🟠 FINANCE</strong></td>
+                        <td>אירועים כלכליים ותקציביים (חריגות, מס, ריבית, תזרים)</td>
+                        <td>רווחיות +10</td>
+                        <td>75% הפחתה</td>
+                        <td>Management, Finance</td>
+                    </tr>
+                    <tr>
+                        <td><strong>🔴 CYBER</strong></td>
+                        <td>אירועי אבטחה וסייבר (כופרה, פישינג, דליפות, פרצות)</td>
+                        <td>אבטחה/רווחיות +10</td>
+                        <td>75% הפחתה</td>
+                        <td>Safety & Compliance</td>
+                    </tr>
+                    <tr>
                         <td><strong>❌ ללא</strong></td>
                         <td>-</td>
                         <td>-</td>
@@ -1304,13 +1370,16 @@
                 🚗 Drivers → שביתת נהגים, מחירי דלק, ביטוח בריאות<br>
                 📞 Dispatchers → קריסת אלגוריתם, עומס שיא, נפילת שרתים<br>
                 🛡️ Safety → מתקפת כופרה, פישינג, פרצת אבטחה<br>
-                לכל אירוע 2 חלופות פעולה — כל אחת משפיעה אחרת על המדדים.
+                לכל אירוע יש <strong>4 חלופות מוכנות</strong> (A,B תפעוליות ו-C,D הקשורות לבעלי העניין),
+                ובנוסף <strong>✍️ חלופה פתוחה</strong> שבה אתם מנסחים פעולה משלכם ובוחרים את השפעתה על המדדים.
+                כל חלופה משפיעה אחרת על המדדים.
             </div>
 
             <div class="guidelines-highlight">
                 <strong>⏰ חשיבות הזמן:</strong><br>
                 ✅ מענה תוך 60 שניות = <strong>+10 נקודות בונוס</strong><br>
-                ⚠️ מענה אחרי 60 שניות = <strong>+5 נקודות בלבד</strong>
+                ⚠️ מענה אחרי 60 שניות = <strong>+5 נקודות בלבד</strong><br>
+                ❌ אי-מענה (מעל 120 שניות) = המשבר "מתפוצץ" ומדד הליבה נפגע ב-<strong>25 נקודות!</strong>
             </div>
         </div>
 
@@ -1322,8 +1391,8 @@
                 <h5>❓ כמה זמן המשחק נמשך?</h5>
                 <div class="guidelines-faq-answer">
                     משך המשמרת נקבע על ידי המנחה (מינימום 10 דקות, ניתן להגדיל עד 60 דקות).
-                    במהלך המשמרת מופיעים אירועים ייעודיים לצוות (1 עד 10, לפי בחירת המנחה), המתפזרים לאורך הזמן לפי הקצב שהוגדר —
-                    בהתחלה (10%), באמצע (50%) ובסוף (90%). בתום הזמן המשחק מסתיים אוטומטית והנתונים מועלים לענן.
+                    האירוע הראשון מופיע אוטומטית אחרי 10 שניות, ושאר האירועים (1 עד 10, לפי בחירת המנחה)
+                    מופיעים אחריו לפי הקצב שהמנחה הגדיר בפאנל הניהול. בתום הזמן המשחק מסתיים אוטומטית והנתונים מועלים לענן.
                 </div>
             </div>
 
@@ -1359,9 +1428,10 @@
                 <div class="guidelines-faq-answer">
                     תלוי בקבוצה שלכם ובסוג האירועים שתתמודדו איתם:<br>
                     🟢 <strong>Customers / Service</strong> → CRM (מגן על אירועי לקוחות ומוניטין)<br>
-                    🔵 <strong>Dispatchers / Maintenance / Finance / Safety</strong> → ISO (מגן על אירועי מערכות ותהליכים)<br>
+                    🔵 <strong>Dispatchers / Maintenance</strong> → ISO (מגן על אירועי מערכות ותהליכים)<br>
                     🟣 <strong>Drivers / Service</strong> → SERVICE (מגן על אירועי עובדים ושירות)<br>
-                    💼 <strong>Management</strong> → בחרו לפי הסיכון הגבוה ביותר (בדרך כלל CRM או ISO)
+                    🟠 <strong>Management / Finance</strong> → FINANCE (מגן על אירועים כלכליים ותקציביים)<br>
+                    🔴 <strong>Safety &amp; Compliance</strong> → CYBER (מגן על אירועי אבטחה וסייבר)
                 </div>
             </div>
 
@@ -1387,6 +1457,15 @@
                 <div class="guidelines-faq-answer">
                     אין "חלופה שגויה"! כל חלופה משפיעה על המדדים בצורה שונה. חלופה אחת עשויה להשפר שביעות רצון אך לפגוע ברווחיות.
                     זה עקרון ניהול אמיתי — אתם צריכים לאזן בין מטרות שונות. המנחה יעריך אתכם לפי הנימוק, לא לפי הבחירה עצמה.
+                </div>
+            </div>
+
+            <div class="guidelines-faq-item" onclick="toggleFaqItem(this)">
+                <h5>❓ איך עובדת החלופה הפתוחה (✍️)?</h5>
+                <div class="guidelines-faq-answer">
+                    מעבר ל-4 החלופות המוכנות, בכל אירוע תוכלו לבחור ב<strong>"חלופה פתוחה"</strong> ולנסח פעולה ניהולית משלכם.
+                    לאחר שתכתבו את הפעולה, תעריכו בעצמכם את השפעתה הצפויה על כל אחד מהמדדים (בין 20- ל-20+).
+                    זו הזדמנות לחשיבה יצירתית ועצמאית — אבל זכרו שעליכם להצדיק את ההערכה שלכם בנימוק ה-ISO 9001.
                 </div>
             </div>
 
@@ -1462,6 +1541,13 @@
 
         </div>
 
+        <!-- כפתור חזרה לתחילת הדף -->
+        <div style="text-align: center; margin: 30px 0 10px 0;">
+            <button class="btn btn-primary" style="font-size: 1.05rem; padding: 14px 36px;" onclick="document.getElementById('guidelines_top').scrollIntoView({ behavior: 'smooth' });">
+                ⬆️ חזרה לתחילת המדריך
+            </button>
+        </div>
+
     </div>
 
 
@@ -1504,7 +1590,7 @@
                 <!-- כרטיס הגדרת משך המשחק -->
                 <div class="admin-card" style="border-top-color: var(--blue-info); margin-bottom: 0;">
                     <h3>⏱️ הגדרת משך המשמרת</h3>
-                    <p style="font-size: 0.9rem; color: #666; margin: 10px 0 15px 0;">קבעו כמה זמן תימשך משמרת כל צוות. שלושת המשברים יתפזרו אוטומטית לאורך הזמן שנבחר (בהתחלה, באמצע ובסוף):</p>
+                    <p style="font-size: 0.9rem; color: #666; margin: 10px 0 15px 0;">קבעו כמה זמן תימשך משמרת כל צוות. האירועים יתפזרו לאורך הזמן לפי הקצב שתגדירו בכרטיס האירועים:</p>
                     <select id="gameDurationConfigInput" class="input-control" onchange="onAdminGameDurationChange()">
                         <option value="10" selected>10 דקות (ברירת מחדל)</option>
                         <option value="15">15 דקות</option>
@@ -1519,16 +1605,13 @@
                 <!-- כרטיס הגדרת אירועים -->
                 <div class="admin-card" style="border-top-color: var(--purple-holder); margin-bottom: 0;">
                     <h3>🎲 הגדרת אירועים</h3>
-                    <p style="font-size: 0.9rem; color: #666; margin: 10px 0 15px 0;">קבעו מתי מתחיל האירוע הראשון, את הקצב בין אירועים, וכמה אירועים יופיעו. כל צוות יקבל אירועים רלוונטיים למדדים שלו:</p>
+                    <p style="font-size: 0.9rem; color: #666; margin: 10px 0 15px 0;">האירוע הראשון מופיע אוטומטית אחרי 10 שניות. קבעו את הקצב בין האירועים וכמה אירועים יופיעו. כל צוות יקבל אירועים רלוונטיים למדדים שלו:</p>
                     
-                    <label style="font-size: 0.85rem; font-weight: bold; color: #444;">⏳ זמן התחלת האירוע הראשון (דקות):</label>
-                    <select id="eventStartConfigInput" class="input-control" style="margin-bottom: 12px;">
-                        <option value="0.5">חצי דקה</option>
-                        <option value="1" selected>1 דקה</option>
-                        <option value="2">2 דקות</option>
-                        <option value="3">3 דקות</option>
-                        <option value="5">5 דקות</option>
-                    </select>
+                    <div style="background:#eef6ff; border:1px solid #bcdcff; border-radius:8px; padding:10px; margin-bottom:12px; font-size:0.85rem; color:#1a5b9e;">
+                        ⏳ <strong>אירוע ראשון:</strong> 10 שניות מתחילת המשמרת (קבוע)
+                    </div>
+                    <!-- שדה מוסתר לתאימות: זמן ההתחלה קבוע ל-10 שניות -->
+                    <select id="eventStartConfigInput" style="display:none;"><option value="0.1667" selected>10s</option></select>
 
                     <label style="font-size: 0.85rem; font-weight: bold; color: #444;">⏱️ קצב בין אירועים (דקות):</label>
                     <select id="eventIntervalConfigInput" class="input-control" style="margin-bottom: 12px;">
@@ -1825,104 +1908,110 @@
     // ===== 🎲 אירועים ייעודיים לכל צוות (10 לכל צוות) =====
     // כל אירוע: title, text, mitigation (המגן שמרכך פגיעה שלילית ב-75%), options[2]
     // מגנים: CRM (לקוחות/מוניטין) | ISO (תהליכים/SLA/מערכות) | SERVICE (שירות/מורל/עובדים)
+        // ===== 🎲 אירועים ייעודיים לכל צוות (10 לכל צוות, 4 חלופות + חלופה פתוחה) =====
+    // A,B = חלופות תפעוליות | C,D = חלופות בעלי עניין | E (פתוחה) = הסטודנט כותב ובוחר השפעה
+    // מגנים: CRM | ISO | SERVICE
+        // ===== 🎲 אירועים ייעודיים לכל צוות (10 לכל צוות, 4 חלופות + חלופה פתוחה) =====
+    // A,B = חלופות תפעוליות | C,D = חלופות בעלי עניין | E (פתוחה) = הסטודנט כותב ובוחר השפעה
+    // מגנים: CRM | ISO | SERVICE | FINANCE | CYBER
     const TEAM_EVENTS = {
-        1: [ // 👥 Customers — satisfaction(ראשי), sla, profitability, morale
-            { title: "🚨 חרם נוסעים ברשתות", mitigation: "CRM", text: "קמפיין ויראלי קורא למחוק את האפליקציה בעקבות תחושת התייקרות.", options: [{ id:"A", text:"חלוקת קופוני הנחה מיידיים (פגיעה ברווחיות).", impact:{ satisfaction:18, profitability:-20 } }, { id:"B", text:"להתעלם ולחכות שהסערה תחלוף.", impact:{ satisfaction:-22, morale:-8 } }] },
-            { title: "⭐ צניחה בדירוג האפליקציה", mitigation: "CRM", text: "הדירוג בחנות צנח מ-4.5 ל-3.1 בגלל גל ביקורות שליליות.", options: [{ id:"A", text:"מענה אישי לכל ביקורת + פיצוי.", impact:{ satisfaction:20, profitability:-12 } }, { id:"B", text:"לשפר רק את הבאגים בשקט.", impact:{ satisfaction:-10, sla:5 } }] },
-            { title: "💸 מתחרה השיק מבצע אגרסיבי", mitigation: "CRM", text: "חברה מתחרה מציעה 50% הנחה לנוסעים חדשים.", options: [{ id:"A", text:"להשוות מחירים מיידית.", impact:{ satisfaction:15, profitability:-22 } }, { id:"B", text:"להשיק תוכנית נאמנות לוותיקים.", impact:{ satisfaction:10, profitability:-6, morale:5 } }] },
-            { title: "📱 תקלת תשלום באפליקציה", mitigation: "ISO", text: "נוסעים חויבו פעמיים בטעות בעקבות באג בסליקה.", options: [{ id:"A", text:"החזר כספי מלא + התנצלות פומבית.", impact:{ satisfaction:14, profitability:-15 } }, { id:"B", text:"תיקון שקט בלי הכרזה.", impact:{ satisfaction:-18, sla:-5 } }] },
-            { title: "♿ תלונת נגישות", mitigation: "SERVICE", text: "ארגון זכויות מתלונן שהאפליקציה לא נגישה לבעלי מוגבלויות.", options: [{ id:"A", text:"השקעה בשדרוג נגישות מלא.", impact:{ satisfaction:16, profitability:-14 } }, { id:"B", text:"תיקונים מינימליים בלבד.", impact:{ satisfaction:-12 } }] },
-            { title: "🎉 ביקורת חיובית ויראלית", mitigation: "ISO", text: "משפיען פרסם חוויה מעולה והביא גל לקוחות חדשים.", options: [{ id:"A", text:"להגביר שרתים ושירות לעומס.", impact:{ satisfaction:18, sla:8, profitability:-8 } }, { id:"B", text:"לא לעשות כלום ולקוות לטוב.", impact:{ satisfaction:-8, sla:-12 } }] },
-            { title: "🕐 זמני המתנה ארוכים", mitigation: "ISO", text: "נוסעים מתלוננים על המתנות של מעל 20 דקות בשעות שיא.", options: [{ id:"A", text:"תמרוץ נהגים לשעות עומס.", impact:{ satisfaction:14, profitability:-12, morale:6 } }, { id:"B", text:"להעלות תעריף שיא (surge).", impact:{ satisfaction:-15, profitability:12 } }] },
-            { title: "🔒 דליפת פרטי לקוחות", mitigation: "CRM", text: "התגלה שדלפו כתובות מייל של נוסעים.", options: [{ id:"A", text:"שקיפות מלאה + פיצוי לנפגעים.", impact:{ satisfaction:8, profitability:-16 } }, { id:"B", text:"להסתיר את האירוע.", impact:{ satisfaction:-25, morale:-10 } }] },
-            { title: "🌟 סקר שביעות רצון שנתי", mitigation: "CRM", text: "הגיע הזמן לסקר השנתי — הזדמנות לשפר תדמית.", options: [{ id:"A", text:"להשקיע בתמריצים למשיבים.", impact:{ satisfaction:12, profitability:-6 } }, { id:"B", text:"לשלוח סקר בסיסי בלבד.", impact:{ satisfaction:2 } }] },
-            { title: "🎁 בקשה לתוכנית VIP", mitigation: "SERVICE", text: "לקוחות פרימיום דורשים שירות מועדף ייעודי.", options: [{ id:"A", text:"להשיק מסלול VIP בתשלום.", impact:{ satisfaction:15, profitability:10, sla:-6 } }, { id:"B", text:"לסרב כדי לשמור על שוויון.", impact:{ satisfaction:-8, morale:4 } }] }
+        1: [ // 👥 Customers
+            { title: "🚨 חרם נוסעים ברשתות", mitigation: "CRM", text: "קמפיין ויראלי קורא למחוק את האפליקציה בעקבות תחושת התייקרות.", options: [{ id:"A", text:"חלוקת קופוני הנחה מיידיים (פגיעה ברווחיות).", impact:{ satisfaction:18, profitability:-20 } }, { id:"B", text:"להתעלם ולחכות שהסערה תחלוף.", impact:{ satisfaction:-22, morale:-8 } }, { id:"C", text:"לשתף את הנוסעים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ satisfaction:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הנוסעים.", impact:{ satisfaction:16, profitability:-14, sla:-4 } }] },
+            { title: "⭐ צניחה בדירוג האפליקציה", mitigation: "CRM", text: "הדירוג בחנות צנח מ-4.5 ל-3.1 בגלל גל ביקורות שליליות.", options: [{ id:"A", text:"מענה אישי לכל ביקורת + פיצוי.", impact:{ satisfaction:20, profitability:-12 } }, { id:"B", text:"לשפר רק את הבאגים בשקט.", impact:{ satisfaction:-10, sla:5 } }, { id:"C", text:"לשתף את הנוסעים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ satisfaction:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הנוסעים.", impact:{ satisfaction:16, profitability:-14, sla:-4 } }] },
+            { title: "💸 מתחרה השיק מבצע אגרסיבי", mitigation: "CRM", text: "חברה מתחרה מציעה 50% הנחה לנוסעים חדשים.", options: [{ id:"A", text:"להשוות מחירים מיידית.", impact:{ satisfaction:15, profitability:-22 } }, { id:"B", text:"להשיק תוכנית נאמנות לוותיקים.", impact:{ satisfaction:10, profitability:-6, morale:5 } }, { id:"C", text:"לשתף את הנוסעים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ satisfaction:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הנוסעים.", impact:{ satisfaction:16, profitability:-14, sla:-4 } }] },
+            { title: "📱 תקלת תשלום באפליקציה", mitigation: "ISO", text: "נוסעים חויבו פעמיים בטעות בעקבות באג בסליקה.", options: [{ id:"A", text:"החזר כספי מלא + התנצלות פומבית.", impact:{ satisfaction:14, profitability:-15 } }, { id:"B", text:"תיקון שקט בלי הכרזה.", impact:{ satisfaction:-18, sla:-5 } }, { id:"C", text:"לשתף את הנוסעים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ satisfaction:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הנוסעים.", impact:{ satisfaction:16, profitability:-14, sla:-4 } }] },
+            { title: "♿ תלונת נגישות", mitigation: "SERVICE", text: "ארגון זכויות מתלונן שהאפליקציה לא נגישה לבעלי מוגבלויות.", options: [{ id:"A", text:"השקעה בשדרוג נגישות מלא.", impact:{ satisfaction:16, profitability:-14 } }, { id:"B", text:"תיקונים מינימליים בלבד.", impact:{ satisfaction:-12 } }, { id:"C", text:"לשתף את הנוסעים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ satisfaction:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הנוסעים.", impact:{ satisfaction:16, profitability:-14, sla:-4 } }] },
+            { title: "🎉 ביקורת חיובית ויראלית", mitigation: "ISO", text: "משפיען פרסם חוויה מעולה והביא גל לקוחות חדשים.", options: [{ id:"A", text:"להגביר שרתים ושירות לעומס.", impact:{ satisfaction:18, sla:8, profitability:-8 } }, { id:"B", text:"לא לעשות כלום ולקוות לטוב.", impact:{ satisfaction:-8, sla:-12 } }, { id:"C", text:"לשתף את הנוסעים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ satisfaction:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הנוסעים.", impact:{ satisfaction:16, profitability:-14, sla:-4 } }] },
+            { title: "🕐 זמני המתנה ארוכים", mitigation: "ISO", text: "נוסעים מתלוננים על המתנות של מעל 20 דקות בשעות שיא.", options: [{ id:"A", text:"תמרוץ נהגים לשעות עומס.", impact:{ satisfaction:14, profitability:-12, morale:6 } }, { id:"B", text:"להעלות תעריף שיא (surge).", impact:{ satisfaction:-15, profitability:12 } }, { id:"C", text:"לשתף את הנוסעים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ satisfaction:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הנוסעים.", impact:{ satisfaction:16, profitability:-14, sla:-4 } }] },
+            { title: "🔒 דליפת פרטי לקוחות", mitigation: "CYBER", text: "התגלה שדלפו כתובות מייל של נוסעים.", options: [{ id:"A", text:"שקיפות מלאה + פיצוי לנפגעים.", impact:{ satisfaction:8, profitability:-16 } }, { id:"B", text:"להסתיר את האירוע.", impact:{ satisfaction:-25, morale:-10 } }, { id:"C", text:"לשתף את הנוסעים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ satisfaction:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הנוסעים.", impact:{ satisfaction:16, profitability:-14, sla:-4 } }] },
+            { title: "🌟 סקר שביעות רצון שנתי", mitigation: "CRM", text: "הגיע הזמן לסקר השנתי — הזדמנות לשפר תדמית.", options: [{ id:"A", text:"להשקיע בתמריצים למשיבים.", impact:{ satisfaction:12, profitability:-6 } }, { id:"B", text:"לשלוח סקר בסיסי בלבד.", impact:{ satisfaction:2 } }, { id:"C", text:"לשתף את הנוסעים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ satisfaction:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הנוסעים.", impact:{ satisfaction:16, profitability:-14, sla:-4 } }] },
+            { title: "🎁 בקשה לתוכנית VIP", mitigation: "SERVICE", text: "לקוחות פרימיום דורשים שירות מועדף ייעודי.", options: [{ id:"A", text:"להשיק מסלול VIP בתשלום.", impact:{ satisfaction:15, profitability:10, sla:-6 } }, { id:"B", text:"לסרב כדי לשמור על שוויון.", impact:{ satisfaction:-8, morale:4 } }, { id:"C", text:"לשתף את הנוסעים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ satisfaction:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הנוסעים.", impact:{ satisfaction:16, profitability:-14, sla:-4 } }] }
         ],
-        2: [ // 🚗 Drivers — morale(ראשי), satisfaction, sla, profitability
-            { title: "✊ איום בשביתת נהגים", mitigation: "SERVICE", text: "הנהגים מאיימים בשביתה בגלל עמלות גבוהות מדי.", options: [{ id:"A", text:"להפחית עמלות (פגיעה ברווחיות).", impact:{ morale:22, profitability:-20 } }, { id:"B", text:"לעמוד על שלך ולסרב.", impact:{ morale:-25, sla:-10 } }] },
-            { title: "⛽ זינוק במחירי דלק", mitigation: "SERVICE", text: "מחירי הדלק קפצו ב-30% והנהגים סופגים את העלות.", options: [{ id:"A", text:"להוסיף תוספת דלק לנהגים.", impact:{ morale:18, profitability:-15 } }, { id:"B", text:"להשאיר את המצב כמו שהוא.", impact:{ morale:-20 } }] },
-            { title: "🏥 בקשה לביטוח בריאות", mitigation: "SERVICE", text: "נהגים דורשים כיסוי ביטוחי כעובדים מן המניין.", options: [{ id:"A", text:"להעניק חבילת ביטוח בסיסית.", impact:{ morale:20, profitability:-14 } }, { id:"B", text:"להמשיך במעמד קבלן עצמאי.", impact:{ morale:-15, satisfaction:-5 } }] },
-            { title: "😴 נהגים עייפים מסכנים בטיחות", mitigation: "ISO", text: "דוחות מצביעים על נהיגה במשמרות ארוכות מדי.", options: [{ id:"A", text:"הגבלת שעות נהיגה מקסימליות.", impact:{ morale:12, sla:-8, profitability:-6 } }, { id:"B", text:"להתעלם כדי לשמור על זמינות.", impact:{ morale:-12, satisfaction:-10 } }] },
-            { title: "🏆 תחרות נהג החודש", mitigation: "SERVICE", text: "הצעה להשיק תוכנית תמריצים והכרה.", options: [{ id:"A", text:"להשיק תוכנית בונוסים והוקרה.", impact:{ morale:18, profitability:-8 } }, { id:"B", text:"לוותר על התקציב.", impact:{ morale:-6 } }] },
-            { title: "📋 תלונות על אפליקציית הנהג", mitigation: "ISO", text: "הממשק לנהגים מסורבל וגורם לתסכול.", options: [{ id:"A", text:"להשקיע בשדרוג ממשק הנהג.", impact:{ morale:14, sla:6, profitability:-10 } }, { id:"B", text:"לדחות לרבעון הבא.", impact:{ morale:-10 } }] },
-            { title: "🚙 בלאי רכבים אישיים", mitigation: "SERVICE", text: "נהגים טוענים שהרכבים שלהם נשחקים בלי פיצוי.", options: [{ id:"A", text:"קרן השתתפות בתחזוקה.", impact:{ morale:16, profitability:-12 } }, { id:"B", text:"להפנות אותם לאחריות עצמית.", impact:{ morale:-14 } }] },
-            { title: "🎓 דרישה להכשרות", mitigation: "SERVICE", text: "נהגים חדשים מבקשים הכשרה מקצועית טובה יותר.", options: [{ id:"A", text:"להשיק תוכנית חונכות.", impact:{ morale:14, satisfaction:8, profitability:-8 } }, { id:"B", text:"להסתפק בסרטון הדרכה קצר.", impact:{ morale:-6, satisfaction:-4 } }] },
-            { title: "🌧️ תנאי מזג אוויר קיצוניים", mitigation: "ISO", text: "סופה הופכת את הנהיגה למסוכנת ולא משתלמת.", options: [{ id:"A", text:"בונוס מזג אוויר + ביטוח מוגבר.", impact:{ morale:16, profitability:-12, satisfaction:6 } }, { id:"B", text:"להמשיך כרגיל בלי תוספת.", impact:{ morale:-18, sla:-8 } }] },
-            { title: "💬 ביקורת ציבורית על יחס לנהגים", mitigation: "CRM", text: "כתבה תקשורתית טוענת שהחברה מנצלת נהגים.", options: [{ id:"A", text:"שיפור תנאים פומבי + שקיפות.", impact:{ morale:18, satisfaction:8, profitability:-12 } }, { id:"B", text:"להוציא הכחשה משפטית.", impact:{ morale:-15, satisfaction:-12 } }] }
+        2: [ // 🚗 Drivers
+            { title: "✊ איום בשביתת נהגים", mitigation: "SERVICE", text: "הנהגים מאיימים בשביתה בגלל עמלות גבוהות מדי.", options: [{ id:"A", text:"להפחית עמלות (פגיעה ברווחיות).", impact:{ morale:22, profitability:-20 } }, { id:"B", text:"לעמוד על שלך ולסרב.", impact:{ morale:-25, sla:-10 } }, { id:"C", text:"לשתף את הנהגים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ morale:12, profitability:-8, satisfaction:6 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הנהגים.", impact:{ morale:16, profitability:-14, sla:-4 } }] },
+            { title: "⛽ זינוק במחירי דלק", mitigation: "SERVICE", text: "מחירי הדלק קפצו ב-30% והנהגים סופגים את העלות.", options: [{ id:"A", text:"להוסיף תוספת דלק לנהגים.", impact:{ morale:18, profitability:-15 } }, { id:"B", text:"להשאיר את המצב כמו שהוא.", impact:{ morale:-20 } }, { id:"C", text:"לשתף את הנהגים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ morale:12, profitability:-8, satisfaction:6 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הנהגים.", impact:{ morale:16, profitability:-14, sla:-4 } }] },
+            { title: "🏥 בקשה לביטוח בריאות", mitigation: "SERVICE", text: "נהגים דורשים כיסוי ביטוחי כעובדים מן המניין.", options: [{ id:"A", text:"להעניק חבילת ביטוח בסיסית.", impact:{ morale:20, profitability:-14 } }, { id:"B", text:"להמשיך במעמד קבלן עצמאי.", impact:{ morale:-15, satisfaction:-5 } }, { id:"C", text:"לשתף את הנהגים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ morale:12, profitability:-8, satisfaction:6 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הנהגים.", impact:{ morale:16, profitability:-14, sla:-4 } }] },
+            { title: "😴 נהגים עייפים מסכנים בטיחות", mitigation: "FINANCE", text: "דוחות מצביעים על נהיגה במשמרות ארוכות מדי.", options: [{ id:"A", text:"הגבלת שעות נהיגה מקסימליות.", impact:{ morale:12, sla:-8, profitability:-6 } }, { id:"B", text:"להתעלם כדי לשמור על זמינות.", impact:{ morale:-12, satisfaction:-10 } }, { id:"C", text:"לשתף את הנהגים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ morale:12, profitability:-8, satisfaction:6 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הנהגים.", impact:{ morale:16, profitability:-14, sla:-4 } }] },
+            { title: "🏆 תחרות נהג החודש", mitigation: "SERVICE", text: "הצעה להשיק תוכנית תמריצים והכרה.", options: [{ id:"A", text:"להשיק תוכנית בונוסים והוקרה.", impact:{ morale:18, profitability:-8 } }, { id:"B", text:"לוותר על התקציב.", impact:{ morale:-6 } }, { id:"C", text:"לשתף את הנהגים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ morale:12, profitability:-8, satisfaction:6 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הנהגים.", impact:{ morale:16, profitability:-14, sla:-4 } }] },
+            { title: "📋 תלונות על אפליקציית הנהג", mitigation: "FINANCE", text: "הממשק לנהגים מסורבל וגורם לתסכול.", options: [{ id:"A", text:"להשקיע בשדרוג ממשק הנהג.", impact:{ morale:14, sla:6, profitability:-10 } }, { id:"B", text:"לדחות לרבעון הבא.", impact:{ morale:-10 } }, { id:"C", text:"לשתף את הנהגים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ morale:12, profitability:-8, satisfaction:6 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הנהגים.", impact:{ morale:16, profitability:-14, sla:-4 } }] },
+            { title: "🚙 בלאי רכבים אישיים", mitigation: "SERVICE", text: "נהגים טוענים שהרכבים שלהם נשחקים בלי פיצוי.", options: [{ id:"A", text:"קרן השתתפות בתחזוקה.", impact:{ morale:16, profitability:-12 } }, { id:"B", text:"להפנות אותם לאחריות עצמית.", impact:{ morale:-14 } }, { id:"C", text:"לשתף את הנהגים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ morale:12, profitability:-8, satisfaction:6 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הנהגים.", impact:{ morale:16, profitability:-14, sla:-4 } }] },
+            { title: "🎓 דרישה להכשרות", mitigation: "SERVICE", text: "נהגים חדשים מבקשים הכשרה מקצועית טובה יותר.", options: [{ id:"A", text:"להשיק תוכנית חונכות.", impact:{ morale:14, satisfaction:8, profitability:-8 } }, { id:"B", text:"להסתפק בסרטון הדרכה קצר.", impact:{ morale:-6, satisfaction:-4 } }, { id:"C", text:"לשתף את הנהגים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ morale:12, profitability:-8, satisfaction:6 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הנהגים.", impact:{ morale:16, profitability:-14, sla:-4 } }] },
+            { title: "🌧️ תנאי מזג אוויר קיצוניים", mitigation: "FINANCE", text: "סופה הופכת את הנהיגה למסוכנת ולא משתלמת.", options: [{ id:"A", text:"בונוס מזג אוויר + ביטוח מוגבר.", impact:{ morale:16, profitability:-12, satisfaction:6 } }, { id:"B", text:"להמשיך כרגיל בלי תוספת.", impact:{ morale:-18, sla:-8 } }, { id:"C", text:"לשתף את הנהגים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ morale:12, profitability:-8, satisfaction:6 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הנהגים.", impact:{ morale:16, profitability:-14, sla:-4 } }] },
+            { title: "💬 ביקורת ציבורית על יחס לנהגים", mitigation: "CRM", text: "כתבה תקשורתית טוענת שהחברה מנצלת נהגים.", options: [{ id:"A", text:"שיפור תנאים פומבי + שקיפות.", impact:{ morale:18, satisfaction:8, profitability:-12 } }, { id:"B", text:"להוציא הכחשה משפטית.", impact:{ morale:-15, satisfaction:-12 } }, { id:"C", text:"לשתף את הנהגים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ morale:12, profitability:-8, satisfaction:6 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הנהגים.", impact:{ morale:16, profitability:-14, sla:-4 } }] }
         ],
-        3: [ // 📞 Dispatchers — sla(ראשי), satisfaction, profitability, morale
-            { title: "⚠️ קריסת אלגוריתם השידוך", mitigation: "ISO", text: "עדכון שגוי שולח נהגים ליעדים מרוחקים.", options: [{ id:"A", text:"מעבר לניתוב ידני זמני.", impact:{ sla:16, morale:-18 } }, { id:"B", text:"השבתת המערכת לשחזור.", impact:{ sla:-22, profitability:-12 } }] },
-            { title: "📈 עומס שיא בלתי צפוי", mitigation: "ISO", text: "אירוע המוני יצר ביקוש פי 5 מהרגיל.", options: [{ id:"A", text:"גיוס סדרנים נוספים במשמרת.", impact:{ sla:18, profitability:-10, morale:-6 } }, { id:"B", text:"להגביל קבלת הזמנות.", impact:{ sla:-12, satisfaction:-15 } }] },
-            { title: "🖥️ נפילת שרתים", mitigation: "ISO", text: "תקלת תשתית הפילה את מערכת השידור ל-15 דקות.", options: [{ id:"A", text:"מעבר מיידי לשרת גיבוי.", impact:{ sla:14, profitability:-12 } }, { id:"B", text:"להמתין לתיקון של הספק.", impact:{ sla:-25, satisfaction:-12 } }] },
-            { title: "🗺️ נתוני מיקום שגויים", mitigation: "ISO", text: "GPS לא מדויק שולח נהגים לכתובות לא נכונות.", options: [{ id:"A", text:"החלפת ספק מפות מיידית.", impact:{ sla:15, profitability:-14 } }, { id:"B", text:"לכייל ידנית את האזורים.", impact:{ sla:6, morale:-10 } }] },
-            { title: "😰 שחיקת סדרנים", mitigation: "SERVICE", text: "הסדרנים מדווחים על עומס נפשי קיצוני.", options: [{ id:"A", text:"להוסיף משמרות והפסקות.", impact:{ morale:15, sla:8, profitability:-10 } }, { id:"B", text:"לדרוש להחזיק מעמד.", impact:{ morale:-20, sla:-8 } }] },
-            { title: "🤖 הצעת אוטומציה חכמה", mitigation: "ISO", text: "ספק מציע מערכת AI לשידוך אוטומטי.", options: [{ id:"A", text:"להטמיע את המערכת.", impact:{ sla:20, profitability:-16, morale:-6 } }, { id:"B", text:"להישאר עם שידוך ידני.", impact:{ sla:-5, profitability:4 } }] },
-            { title: "📞 זמני מענה ארוכים במוקד", mitigation: "SERVICE", text: "נוסעים ממתינים דקות ארוכות לקבלת מענה.", options: [{ id:"A", text:"הוספת קו מענה אוטומטי.", impact:{ sla:14, satisfaction:8, profitability:-8 } }, { id:"B", text:"להשאיר את כוח האדם הקיים.", impact:{ sla:-12, satisfaction:-10 } }] },
-            { title: "🔄 התנגשות הזמנות כפולות", mitigation: "ISO", text: "באג מקצה אותו נהג לשתי הזמנות במקביל.", options: [{ id:"A", text:"תיקון דחוף + פיצוי לנוסעים.", impact:{ sla:12, satisfaction:6, profitability:-10 } }, { id:"B", text:"לטפל ידנית בכל מקרה.", impact:{ sla:-8, morale:-12 } }] },
-            { title: "📊 דרישת דוחות בזמן אמת", mitigation: "ISO", text: "ההנהלה דורשת לוח בקרה חי של ביצועים.", options: [{ id:"A", text:"לפתח dashboard בזמן אמת.", impact:{ sla:10, profitability:-8, morale:4 } }, { id:"B", text:"להסתפק בדוח יומי.", impact:{ sla:-4 } }] },
-            { title: "🌐 הרחבה לאזור חדש", mitigation: "SERVICE", text: "החברה נכנסת לעיר חדשה — הסדרנים צריכים לכסות יותר.", options: [{ id:"A", text:"להקים צוות סדרנים ייעודי.", impact:{ sla:14, profitability:-15, morale:6 } }, { id:"B", text:"לפזר עומס על הצוות הקיים.", impact:{ sla:-12, morale:-14 } }] }
+        3: [ // 📞 Dispatchers
+            { title: "⚠️ קריסת אלגוריתם השידוך", mitigation: "ISO", text: "עדכון שגוי שולח נהגים ליעדים מרוחקים.", options: [{ id:"A", text:"מעבר לניתוב ידני זמני.", impact:{ sla:16, morale:-18 } }, { id:"B", text:"השבתת המערכת לשחזור.", impact:{ sla:-22, profitability:-12 } }, { id:"C", text:"לשתף את הסדרנים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ sla:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הסדרנים.", impact:{ sla:16, profitability:-14 } }] },
+            { title: "📈 עומס שיא בלתי צפוי", mitigation: "FINANCE", text: "אירוע המוני יצר ביקוש פי 5 מהרגיל.", options: [{ id:"A", text:"גיוס סדרנים נוספים במשמרת.", impact:{ sla:18, profitability:-10, morale:-6 } }, { id:"B", text:"להגביל קבלת הזמנות.", impact:{ sla:-12, satisfaction:-15 } }, { id:"C", text:"לשתף את הסדרנים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ sla:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הסדרנים.", impact:{ sla:16, profitability:-14 } }] },
+            { title: "🖥️ נפילת שרתים", mitigation: "ISO", text: "תקלת תשתית הפילה את מערכת השידור ל-15 דקות.", options: [{ id:"A", text:"מעבר מיידי לשרת גיבוי.", impact:{ sla:14, profitability:-12 } }, { id:"B", text:"להמתין לתיקון של הספק.", impact:{ sla:-25, satisfaction:-12 } }, { id:"C", text:"לשתף את הסדרנים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ sla:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הסדרנים.", impact:{ sla:16, profitability:-14 } }] },
+            { title: "🗺️ נתוני מיקום שגויים", mitigation: "ISO", text: "GPS לא מדויק שולח נהגים לכתובות לא נכונות.", options: [{ id:"A", text:"החלפת ספק מפות מיידית.", impact:{ sla:15, profitability:-14 } }, { id:"B", text:"לכייל ידנית את האזורים.", impact:{ sla:6, morale:-10 } }, { id:"C", text:"לשתף את הסדרנים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ sla:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הסדרנים.", impact:{ sla:16, profitability:-14 } }] },
+            { title: "😰 שחיקת סדרנים", mitigation: "FINANCE", text: "הסדרנים מדווחים על עומס נפשי קיצוני.", options: [{ id:"A", text:"להוסיף משמרות והפסקות.", impact:{ morale:15, sla:8, profitability:-10 } }, { id:"B", text:"לדרוש להחזיק מעמד.", impact:{ morale:-20, sla:-8 } }, { id:"C", text:"לשתף את הסדרנים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ sla:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הסדרנים.", impact:{ sla:16, profitability:-14 } }] },
+            { title: "🤖 הצעת אוטומציה חכמה", mitigation: "ISO", text: "ספק מציע מערכת AI לשידוך אוטומטי.", options: [{ id:"A", text:"להטמיע את המערכת.", impact:{ sla:20, profitability:-16, morale:-6 } }, { id:"B", text:"להישאר עם שידוך ידני.", impact:{ sla:-5, profitability:4 } }, { id:"C", text:"לשתף את הסדרנים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ sla:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הסדרנים.", impact:{ sla:16, profitability:-14 } }] },
+            { title: "📞 זמני מענה ארוכים במוקד", mitigation: "SERVICE", text: "נוסעים ממתינים דקות ארוכות לקבלת מענה.", options: [{ id:"A", text:"הוספת קו מענה אוטומטי.", impact:{ sla:14, satisfaction:8, profitability:-8 } }, { id:"B", text:"להשאיר את כוח האדם הקיים.", impact:{ sla:-12, satisfaction:-10 } }, { id:"C", text:"לשתף את הסדרנים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ sla:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הסדרנים.", impact:{ sla:16, profitability:-14 } }] },
+            { title: "🔄 התנגשות הזמנות כפולות", mitigation: "ISO", text: "באג מקצה אותו נהג לשתי הזמנות במקביל.", options: [{ id:"A", text:"תיקון דחוף + פיצוי לנוסעים.", impact:{ sla:12, satisfaction:6, profitability:-10 } }, { id:"B", text:"לטפל ידנית בכל מקרה.", impact:{ sla:-8, morale:-12 } }, { id:"C", text:"לשתף את הסדרנים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ sla:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הסדרנים.", impact:{ sla:16, profitability:-14 } }] },
+            { title: "📊 דרישת דוחות בזמן אמת", mitigation: "ISO", text: "ההנהלה דורשת לוח בקרה חי של ביצועים.", options: [{ id:"A", text:"לפתח dashboard בזמן אמת.", impact:{ sla:10, profitability:-8, morale:4 } }, { id:"B", text:"להסתפק בדוח יומי.", impact:{ sla:-4 } }, { id:"C", text:"לשתף את הסדרנים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ sla:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הסדרנים.", impact:{ sla:16, profitability:-14 } }] },
+            { title: "🌐 הרחבה לאזור חדש", mitigation: "SERVICE", text: "החברה נכנסת לעיר חדשה — הסדרנים צריכים לכסות יותר.", options: [{ id:"A", text:"להקים צוות סדרנים ייעודי.", impact:{ sla:14, profitability:-15, morale:6 } }, { id:"B", text:"לפזר עומס על הצוות הקיים.", impact:{ sla:-12, morale:-14 } }, { id:"C", text:"לשתף את הסדרנים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ sla:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הסדרנים.", impact:{ sla:16, profitability:-14 } }] }
         ],
-        4: [ // 💼 Management — profitability(ראשי), satisfaction, sla, morale
-            { title: "📉 דוח רבעוני מאכזב", mitigation: "ISO", text: "הרווחיות צנחה והמשקיעים לחוצים.", options: [{ id:"A", text:"קיצוצי עלויות רוחביים.", impact:{ profitability:18, morale:-15, satisfaction:-6 } }, { id:"B", text:"השקעה בצמיחה ארוכת טווח.", impact:{ profitability:-12, satisfaction:8, morale:6 } }] },
-            { title: "🤝 הצעת מיזוג ממתחרה", mitigation: "ISO", text: "מתחרה מציע מיזוג שיגדיל נתח שוק.", options: [{ id:"A", text:"לקבל את המיזוג.", impact:{ profitability:16, morale:-10, sla:-6 } }, { id:"B", text:"להישאר עצמאיים.", impact:{ profitability:-6, morale:8 } }] },
-            { title: "🏛️ רגולציה חדשה", mitigation: "CRM", text: "העירייה מטילה אגרות חדשות על חברות מוניות.", options: [{ id:"A", text:"לספוג את העלות ולא לייקר.", impact:{ profitability:-16, satisfaction:10 } }, { id:"B", text:"לגלגל את העלות לנוסעים.", impact:{ profitability:8, satisfaction:-15 } }] },
-            { title: "💡 הזדמנות השקעה בטכנולוגיה", mitigation: "ISO", text: "סטארטאפ מציע טכנולוגיית ניתוב חוסכת דלק.", options: [{ id:"A", text:"להשקיע מראש.", impact:{ profitability:-12, sla:12 } }, { id:"B", text:"להמתין שתוכיח את עצמה.", impact:{ profitability:2 } }] },
-            { title: "📰 משבר תדמיתי תקשורתי", mitigation: "CRM", text: "כתבה חושפת תנאי עבודה בעייתיים.", options: [{ id:"A", text:"קמפיין שיקום תדמית יקר.", impact:{ profitability:-14, satisfaction:12, morale:8 } }, { id:"B", text:"להמתין שהרעש יחלוף.", impact:{ profitability:4, satisfaction:-15, morale:-10 } }] },
-            { title: "👔 דרישת העלאות שכר", mitigation: "SERVICE", text: "מחלקות שונות דורשות עדכון שכר.", options: [{ id:"A", text:"לאשר העלאה מדורגת.", impact:{ profitability:-15, morale:18 } }, { id:"B", text:"להקפיא שכר.", impact:{ profitability:8, morale:-20 } }] },
-            { title: "🌍 הזדמנות התרחבות בינלאומית", mitigation: "ISO", text: "אפשרות להיכנס לשוק חדש בחו\"ל.", options: [{ id:"A", text:"להשקיע בהתרחבות אגרסיבית.", impact:{ profitability:-18, satisfaction:6 } }, { id:"B", text:"להתמקד בשוק המקומי.", impact:{ profitability:8, sla:4 } }] },
-            { title: "🔋 יעדי קיימות", mitigation: "CRM", text: "לחץ ציבורי לעבור לצי רכבים חשמלי.", options: [{ id:"A", text:"להתחיל מעבר לחשמלי.", impact:{ profitability:-16, satisfaction:14, morale:6 } }, { id:"B", text:"לדחות את המעבר.", impact:{ profitability:6, satisfaction:-10 } }] },
-            { title: "💳 בעיית תזרים מזומנים", mitigation: "ISO", text: "פער תזרימי מאיים על תשלומי הספקים.", options: [{ id:"A", text:"לקחת הלוואת גישור.", impact:{ profitability:-8, sla:6 } }, { id:"B", text:"לעכב תשלומים לספקים.", impact:{ profitability:6, sla:-12, morale:-8 } }] },
-            { title: "📊 לחץ משקיעים לדיבידנד", mitigation: "ISO", text: "המשקיעים דורשים חלוקת רווחים מיידית.", options: [{ id:"A", text:"לחלק דיבידנד ולרצות אותם.", impact:{ profitability:-10, morale:-6 } }, { id:"B", text:"להשקיע מחדש בחברה.", impact:{ profitability:8, satisfaction:6, morale:8 } }] }
+        4: [ // 💼 Management
+            { title: "📉 דוח רבעוני מאכזב", mitigation: "FINANCE", text: "הרווחיות צנחה והמשקיעים לחוצים.", options: [{ id:"A", text:"קיצוצי עלויות רוחביים.", impact:{ profitability:18, morale:-15, satisfaction:-6 } }, { id:"B", text:"השקעה בצמיחה ארוכת טווח.", impact:{ profitability:-12, satisfaction:8, morale:6 } }, { id:"C", text:"לשתף את המשקיעים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ profitability:12, satisfaction:6, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף המשקיעים.", impact:{ profitability:16, sla:-10 } }] },
+            { title: "🤝 הצעת מיזוג ממתחרה", mitigation: "ISO", text: "מתחרה מציע מיזוג שיגדיל נתח שוק.", options: [{ id:"A", text:"לקבל את המיזוג.", impact:{ profitability:16, morale:-10, sla:-6 } }, { id:"B", text:"להישאר עצמאיים.", impact:{ profitability:-6, morale:8 } }, { id:"C", text:"לשתף את המשקיעים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ profitability:12, satisfaction:6, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף המשקיעים.", impact:{ profitability:16, sla:-10 } }] },
+            { title: "🏛️ רגולציה חדשה", mitigation: "CRM", text: "העירייה מטילה אגרות חדשות על חברות מוניות.", options: [{ id:"A", text:"לספוג את העלות ולא לייקר.", impact:{ profitability:-16, satisfaction:10 } }, { id:"B", text:"לגלגל את העלות לנוסעים.", impact:{ profitability:8, satisfaction:-15 } }, { id:"C", text:"לשתף את המשקיעים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ profitability:12, satisfaction:6, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף המשקיעים.", impact:{ profitability:16, sla:-10 } }] },
+            { title: "💡 הזדמנות השקעה בטכנולוגיה", mitigation: "FINANCE", text: "סטארטאפ מציע טכנולוגיית ניתוב חוסכת דלק.", options: [{ id:"A", text:"להשקיע מראש.", impact:{ profitability:-12, sla:12 } }, { id:"B", text:"להמתין שתוכיח את עצמה.", impact:{ profitability:2 } }, { id:"C", text:"לשתף את המשקיעים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ profitability:12, satisfaction:6, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף המשקיעים.", impact:{ profitability:16, sla:-10 } }] },
+            { title: "📰 משבר תדמיתי תקשורתי", mitigation: "CRM", text: "כתבה חושפת תנאי עבודה בעייתיים.", options: [{ id:"A", text:"קמפיין שיקום תדמית יקר.", impact:{ profitability:-14, satisfaction:12, morale:8 } }, { id:"B", text:"להמתין שהרעש יחלוף.", impact:{ profitability:4, satisfaction:-15, morale:-10 } }, { id:"C", text:"לשתף את המשקיעים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ profitability:12, satisfaction:6, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף המשקיעים.", impact:{ profitability:16, sla:-10 } }] },
+            { title: "👔 דרישת העלאות שכר", mitigation: "SERVICE", text: "מחלקות שונות דורשות עדכון שכר.", options: [{ id:"A", text:"לאשר העלאה מדורגת.", impact:{ profitability:-15, morale:18 } }, { id:"B", text:"להקפיא שכר.", impact:{ profitability:8, morale:-20 } }, { id:"C", text:"לשתף את המשקיעים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ profitability:12, satisfaction:6, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף המשקיעים.", impact:{ profitability:16, sla:-10 } }] },
+            { title: "🌍 הזדמנות התרחבות בינלאומית", mitigation: "ISO", text: "אפשרות להיכנס לשוק חדש בחו\"ל.", options: [{ id:"A", text:"להשקיע בהתרחבות אגרסיבית.", impact:{ profitability:-18, satisfaction:6 } }, { id:"B", text:"להתמקד בשוק המקומי.", impact:{ profitability:8, sla:4 } }, { id:"C", text:"לשתף את המשקיעים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ profitability:12, satisfaction:6, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף המשקיעים.", impact:{ profitability:16, sla:-10 } }] },
+            { title: "🔋 יעדי קיימות", mitigation: "CRM", text: "לחץ ציבורי לעבור לצי רכבים חשמלי.", options: [{ id:"A", text:"להתחיל מעבר לחשמלי.", impact:{ profitability:-16, satisfaction:14, morale:6 } }, { id:"B", text:"לדחות את המעבר.", impact:{ profitability:6, satisfaction:-10 } }, { id:"C", text:"לשתף את המשקיעים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ profitability:12, satisfaction:6, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף המשקיעים.", impact:{ profitability:16, sla:-10 } }] },
+            { title: "💳 בעיית תזרים מזומנים", mitigation: "FINANCE", text: "פער תזרימי מאיים על תשלומי הספקים.", options: [{ id:"A", text:"לקחת הלוואת גישור.", impact:{ profitability:-8, sla:6 } }, { id:"B", text:"לעכב תשלומים לספקים.", impact:{ profitability:6, sla:-12, morale:-8 } }, { id:"C", text:"לשתף את המשקיעים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ profitability:12, satisfaction:6, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף המשקיעים.", impact:{ profitability:16, sla:-10 } }] },
+            { title: "📊 לחץ משקיעים לדיבידנד", mitigation: "FINANCE", text: "המשקיעים דורשים חלוקת רווחים מיידית.", options: [{ id:"A", text:"לחלק דיבידנד ולרצות אותם.", impact:{ profitability:-10, morale:-6 } }, { id:"B", text:"להשקיע מחדש בחברה.", impact:{ profitability:8, satisfaction:6, morale:8 } }, { id:"C", text:"לשתף את המשקיעים בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ profitability:12, satisfaction:6, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף המשקיעים.", impact:{ profitability:16, sla:-10 } }] }
         ],
-        5: [ // 🎧 Service & Support — satisfaction(ראשי), sla, profitability, morale
-            { title: "🔥 כשל שירות חמור ויראלי", mitigation: "SERVICE", text: "סרטון מציג נציג שירות גס רוח כלפי לקוח.", options: [{ id:"A", text:"התנצלות פומבית + הכשרה מחדש.", impact:{ satisfaction:16, morale:-8 } }, { id:"B", text:"תגובה משפטית לקונית.", impact:{ satisfaction:-22, sla:-8 } }] },
-            { title: "📞 הצפת פניות במוקד", mitigation: "SERVICE", text: "מספר הפניות הכפיל את עצמו בן לילה.", options: [{ id:"A", text:"לגייס נציגים זמניים.", impact:{ satisfaction:14, sla:10, profitability:-12 } }, { id:"B", text:"להאריך זמני המתנה.", impact:{ satisfaction:-16, morale:-8 } }] },
-            { title: "🤖 הצעת צ'אטבוט AI", mitigation: "ISO", text: "ספק מציע בוט שיענה על פניות נפוצות.", options: [{ id:"A", text:"להטמיע צ'אטבוט.", impact:{ satisfaction:8, sla:12, profitability:-8 } }, { id:"B", text:"להישאר עם מענה אנושי בלבד.", impact:{ satisfaction:6, profitability:-6 } }] },
-            { title: "😤 נציגים שחוקים", mitigation: "SERVICE", text: "צוות התמיכה מדווח על שחיקה ועזיבות.", options: [{ id:"A", text:"תוכנית רווחה ותגמול.", impact:{ morale:18, satisfaction:8, profitability:-10 } }, { id:"B", text:"להגביר יעדים ולחץ.", impact:{ morale:-20, satisfaction:-10 } }] },
-            { title: "⏱️ דרישת SLA לזמן מענה", mitigation: "ISO", text: "ההנהלה דורשת מענה תוך 2 דקות לכל פנייה.", options: [{ id:"A", text:"להשקיע במערכת ניתוב פניות.", impact:{ sla:14, satisfaction:10, profitability:-10 } }, { id:"B", text:"ללחוץ על הנציגים הקיימים.", impact:{ sla:6, morale:-14 } }] },
-            { title: "🌐 דרישה לתמיכה רב-לשונית", mitigation: "SERVICE", text: "לקוחות דוברי שפות שונות מתקשים לקבל שירות.", options: [{ id:"A", text:"לגייס נציגים רב-לשוניים.", impact:{ satisfaction:14, profitability:-12 } }, { id:"B", text:"להסתמך על תרגום אוטומטי.", impact:{ satisfaction:-6, sla:4 } }] },
-            { title: "📋 דרישת מאגר ידע", mitigation: "ISO", text: "נציגים מבקשים מאגר תשובות מוכן.", options: [{ id:"A", text:"לבנות מאגר ידע מקיף.", impact:{ sla:12, satisfaction:8, profitability:-6 } }, { id:"B", text:"להמשיך מהזיכרון.", impact:{ sla:-8, morale:-6 } }] },
-            { title: "🎁 בקשת פיצוי המוני", mitigation: "CRM", text: "תקלה כללית גרמה למאות לקוחות לדרוש פיצוי.", options: [{ id:"A", text:"פיצוי נדיב לכולם.", impact:{ satisfaction:18, profitability:-16 } }, { id:"B", text:"פיצוי מינימלי סלקטיבי.", impact:{ satisfaction:-12, profitability:-4 } }] },
-            { title: "📊 סקר NPS נמוך", mitigation: "CRM", text: "מדד שביעות הרצון צנח לרמה מדאיגה.", options: [{ id:"A", text:"תוכנית שיפור שירות מקיפה.", impact:{ satisfaction:16, profitability:-10, morale:6 } }, { id:"B", text:"לטפל רק בתלונות החמורות.", impact:{ satisfaction:-6 } }] },
-            { title: "🕐 דרישה לשירות 24/7", mitigation: "SERVICE", text: "לקוחות דורשים תמיכה מסביב לשעון.", options: [{ id:"A", text:"להקים משמרת לילה.", impact:{ satisfaction:14, sla:8, profitability:-14, morale:-6 } }, { id:"B", text:"להישאר בשעות יום בלבד.", impact:{ satisfaction:-12 } }] }
+        5: [ // 🎧 Service & Support
+            { title: "🔥 כשל שירות חמור ויראלי", mitigation: "SERVICE", text: "סרטון מציג נציג שירות גס רוח כלפי לקוח.", options: [{ id:"A", text:"התנצלות פומבית + הכשרה מחדש.", impact:{ satisfaction:16, morale:-8 } }, { id:"B", text:"תגובה משפטית לקונית.", impact:{ satisfaction:-22, sla:-8 } }, { id:"C", text:"לשתף את הלקוחות בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ satisfaction:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הלקוחות.", impact:{ satisfaction:16, profitability:-14, sla:-4 } }] },
+            { title: "📞 הצפת פניות במוקד", mitigation: "FINANCE", text: "מספר הפניות הכפיל את עצמו בן לילה.", options: [{ id:"A", text:"לגייס נציגים זמניים.", impact:{ satisfaction:14, sla:10, profitability:-12 } }, { id:"B", text:"להאריך זמני המתנה.", impact:{ satisfaction:-16, morale:-8 } }, { id:"C", text:"לשתף את הלקוחות בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ satisfaction:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הלקוחות.", impact:{ satisfaction:16, profitability:-14, sla:-4 } }] },
+            { title: "🤖 הצעת צ'אטבוט AI", mitigation: "ISO", text: "ספק מציע בוט שיענה על פניות נפוצות.", options: [{ id:"A", text:"להטמיע צ'אטבוט.", impact:{ satisfaction:8, sla:12, profitability:-8 } }, { id:"B", text:"להישאר עם מענה אנושי בלבד.", impact:{ satisfaction:6, profitability:-6 } }, { id:"C", text:"לשתף את הלקוחות בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ satisfaction:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הלקוחות.", impact:{ satisfaction:16, profitability:-14, sla:-4 } }] },
+            { title: "😤 נציגים שחוקים", mitigation: "SERVICE", text: "צוות התמיכה מדווח על שחיקה ועזיבות.", options: [{ id:"A", text:"תוכנית רווחה ותגמול.", impact:{ morale:18, satisfaction:8, profitability:-10 } }, { id:"B", text:"להגביר יעדים ולחץ.", impact:{ morale:-20, satisfaction:-10 } }, { id:"C", text:"לשתף את הלקוחות בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ satisfaction:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הלקוחות.", impact:{ satisfaction:16, profitability:-14, sla:-4 } }] },
+            { title: "⏱️ דרישת SLA לזמן מענה", mitigation: "ISO", text: "ההנהלה דורשת מענה תוך 2 דקות לכל פנייה.", options: [{ id:"A", text:"להשקיע במערכת ניתוב פניות.", impact:{ sla:14, satisfaction:10, profitability:-10 } }, { id:"B", text:"ללחוץ על הנציגים הקיימים.", impact:{ sla:6, morale:-14 } }, { id:"C", text:"לשתף את הלקוחות בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ satisfaction:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הלקוחות.", impact:{ satisfaction:16, profitability:-14, sla:-4 } }] },
+            { title: "🌐 דרישה לתמיכה רב-לשונית", mitigation: "SERVICE", text: "לקוחות דוברי שפות שונות מתקשים לקבל שירות.", options: [{ id:"A", text:"לגייס נציגים רב-לשוניים.", impact:{ satisfaction:14, profitability:-12 } }, { id:"B", text:"להסתמך על תרגום אוטומטי.", impact:{ satisfaction:-6, sla:4 } }, { id:"C", text:"לשתף את הלקוחות בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ satisfaction:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הלקוחות.", impact:{ satisfaction:16, profitability:-14, sla:-4 } }] },
+            { title: "📋 דרישת מאגר ידע", mitigation: "ISO", text: "נציגים מבקשים מאגר תשובות מוכן.", options: [{ id:"A", text:"לבנות מאגר ידע מקיף.", impact:{ sla:12, satisfaction:8, profitability:-6 } }, { id:"B", text:"להמשיך מהזיכרון.", impact:{ sla:-8, morale:-6 } }, { id:"C", text:"לשתף את הלקוחות בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ satisfaction:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הלקוחות.", impact:{ satisfaction:16, profitability:-14, sla:-4 } }] },
+            { title: "🎁 בקשת פיצוי המוני", mitigation: "CRM", text: "תקלה כללית גרמה למאות לקוחות לדרוש פיצוי.", options: [{ id:"A", text:"פיצוי נדיב לכולם.", impact:{ satisfaction:18, profitability:-16 } }, { id:"B", text:"פיצוי מינימלי סלקטיבי.", impact:{ satisfaction:-12, profitability:-4 } }, { id:"C", text:"לשתף את הלקוחות בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ satisfaction:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הלקוחות.", impact:{ satisfaction:16, profitability:-14, sla:-4 } }] },
+            { title: "📊 סקר NPS נמוך", mitigation: "CRM", text: "מדד שביעות הרצון צנח לרמה מדאיגה.", options: [{ id:"A", text:"תוכנית שיפור שירות מקיפה.", impact:{ satisfaction:16, profitability:-10, morale:6 } }, { id:"B", text:"לטפל רק בתלונות החמורות.", impact:{ satisfaction:-6 } }, { id:"C", text:"לשתף את הלקוחות בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ satisfaction:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הלקוחות.", impact:{ satisfaction:16, profitability:-14, sla:-4 } }] },
+            { title: "🕐 דרישה לשירות 24/7", mitigation: "FINANCE", text: "לקוחות דורשים תמיכה מסביב לשעון.", options: [{ id:"A", text:"להקים משמרת לילה.", impact:{ satisfaction:14, sla:8, profitability:-14, morale:-6 } }, { id:"B", text:"להישאר בשעות יום בלבד.", impact:{ satisfaction:-12 } }, { id:"C", text:"לשתף את הלקוחות בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ satisfaction:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הלקוחות.", impact:{ satisfaction:16, profitability:-14, sla:-4 } }] }
         ],
-        6: [ // 🔧 Maintenance — sla(ראשי), satisfaction, profitability, morale
-            { title: "🚙 כשל בטיחותי בצי", mitigation: "ISO", text: "התגלתה תקלת בלמים בכמה רכבים.", options: [{ id:"A", text:"השבתה ובדיקה מיידית של הצי.", impact:{ sla:-12, satisfaction:14, profitability:-10 } }, { id:"B", text:"להמשיך ולתקן בהדרגה.", impact:{ sla:6, satisfaction:-18 } }] },
-            { title: "🔧 עומס תחזוקה מצטבר", mitigation: "ISO", text: "תור התיקונים גדל ורכבים תקועים במוסך.", options: [{ id:"A", text:"להוסיף משמרת מכונאים.", impact:{ sla:16, profitability:-12, morale:-6 } }, { id:"B", text:"לתעדף תיקונים קריטיים בלבד.", impact:{ sla:-8, satisfaction:-6 } }] },
-            { title: "⚙️ הצעת תוכנת ניהול תחזוקה", mitigation: "ISO", text: "מערכת חכמה שתנבא תקלות מראש.", options: [{ id:"A", text:"להטמיע תחזוקה חזויה.", impact:{ sla:18, profitability:-14 } }, { id:"B", text:"להמשיך בתחזוקת שבר.", impact:{ sla:-6, profitability:4 } }] },
-            { title: "🛞 מחסור בחלקי חילוף", mitigation: "ISO", text: "שרשרת האספקה מתעכבת והחלקים אוזלים.", options: [{ id:"A", text:"לבנות מלאי חירום.", impact:{ sla:12, profitability:-12 } }, { id:"B", text:"להזמין לפי הצורך בלבד.", impact:{ sla:-14, satisfaction:-8 } }] },
-            { title: "👷 בטיחות עובדי המוסך", mitigation: "SERVICE", text: "תקרית בטיחות העלתה חששות בקרב המכונאים.", options: [{ id:"A", text:"השקעה בציוד מגן ונהלים.", impact:{ morale:16, sla:6, profitability:-8 } }, { id:"B", text:"להמשיך כרגיל.", impact:{ morale:-18, sla:-6 } }] },
-            { title: "🔋 לחץ למעבר לרכב חשמלי", mitigation: "ISO", text: "צריך להכשיר את המוסך לתחזוקת רכבים חשמליים.", options: [{ id:"A", text:"להכשיר ולהיערך מראש.", impact:{ sla:10, profitability:-14, morale:6 } }, { id:"B", text:"לדחות עד שיהיו רכבים.", impact:{ sla:-6 } }] },
-            { title: "📋 כשל בתקן ISO", mitigation: "ISO", text: "מבדק חיצוני מצא ליקויים בנהלי התחזוקה.", options: [{ id:"A", text:"לתקן ולהסמיך מחדש.", impact:{ sla:14, satisfaction:8, profitability:-10 } }, { id:"B", text:"לטפל בליקויים הקריטיים בלבד.", impact:{ sla:-8, satisfaction:-6 } }] },
-            { title: "🧹 בעיית ניקיון וחיטוי רכבים", mitigation: "CRM", text: "תלונות על רכבים מלוכלכים פוגעות במוניטין.", options: [{ id:"A", text:"להקים תחנת חיטוי יומית.", impact:{ satisfaction:14, sla:4, profitability:-8 } }, { id:"B", text:"ניקיון שבועי בלבד.", impact:{ satisfaction:-10 } }] },
-            { title: "🛰️ כשל מערכות ניטור צי", mitigation: "ISO", text: "מערכת המעקב אחר הרכבים קרסה.", options: [{ id:"A", text:"שדרוג מערכת הניטור.", impact:{ sla:16, profitability:-12 } }, { id:"B", text:"מעקב ידני זמני.", impact:{ sla:-10, morale:-8 } }] },
-            { title: "📈 גידול פתאומי בצי", mitigation: "ISO", text: "החברה הוסיפה 100 רכבים — עומס תחזוקה כפול.", options: [{ id:"A", text:"להרחיב את מערך התחזוקה.", impact:{ sla:14, profitability:-16, morale:4 } }, { id:"B", text:"לפזר עומס על הקיים.", impact:{ sla:-14, morale:-12 } }] }
+        6: [ // 🔧 Maintenance
+            { title: "🚙 כשל בטיחותי בצי", mitigation: "ISO", text: "התגלתה תקלת בלמים בכמה רכבים.", options: [{ id:"A", text:"השבתה ובדיקה מיידית של הצי.", impact:{ sla:-12, satisfaction:14, profitability:-10 } }, { id:"B", text:"להמשיך ולתקן בהדרגה.", impact:{ sla:6, satisfaction:-18 } }, { id:"C", text:"לשתף את צוות התחזוקה בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ sla:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף צוות התחזוקה.", impact:{ sla:16, profitability:-14 } }] },
+            { title: "🔧 עומס תחזוקה מצטבר", mitigation: "FINANCE", text: "תור התיקונים גדל ורכבים תקועים במוסך.", options: [{ id:"A", text:"להוסיף משמרת מכונאים.", impact:{ sla:16, profitability:-12, morale:-6 } }, { id:"B", text:"לתעדף תיקונים קריטיים בלבד.", impact:{ sla:-8, satisfaction:-6 } }, { id:"C", text:"לשתף את צוות התחזוקה בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ sla:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף צוות התחזוקה.", impact:{ sla:16, profitability:-14 } }] },
+            { title: "⚙️ הצעת תוכנת ניהול תחזוקה", mitigation: "ISO", text: "מערכת חכמה שתנבא תקלות מראש.", options: [{ id:"A", text:"להטמיע תחזוקה חזויה.", impact:{ sla:18, profitability:-14 } }, { id:"B", text:"להמשיך בתחזוקת שבר.", impact:{ sla:-6, profitability:4 } }, { id:"C", text:"לשתף את צוות התחזוקה בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ sla:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף צוות התחזוקה.", impact:{ sla:16, profitability:-14 } }] },
+            { title: "🛞 מחסור בחלקי חילוף", mitigation: "ISO", text: "שרשרת האספקה מתעכבת והחלקים אוזלים.", options: [{ id:"A", text:"לבנות מלאי חירום.", impact:{ sla:12, profitability:-12 } }, { id:"B", text:"להזמין לפי הצורך בלבד.", impact:{ sla:-14, satisfaction:-8 } }, { id:"C", text:"לשתף את צוות התחזוקה בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ sla:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף צוות התחזוקה.", impact:{ sla:16, profitability:-14 } }] },
+            { title: "👷 בטיחות עובדי המוסך", mitigation: "SERVICE", text: "תקרית בטיחות העלתה חששות בקרב המכונאים.", options: [{ id:"A", text:"השקעה בציוד מגן ונהלים.", impact:{ morale:16, sla:6, profitability:-8 } }, { id:"B", text:"להמשיך כרגיל.", impact:{ morale:-18, sla:-6 } }, { id:"C", text:"לשתף את צוות התחזוקה בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ sla:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף צוות התחזוקה.", impact:{ sla:16, profitability:-14 } }] },
+            { title: "🔋 לחץ למעבר לרכב חשמלי", mitigation: "ISO", text: "צריך להכשיר את המוסך לתחזוקת רכבים חשמליים.", options: [{ id:"A", text:"להכשיר ולהיערך מראש.", impact:{ sla:10, profitability:-14, morale:6 } }, { id:"B", text:"לדחות עד שיהיו רכבים.", impact:{ sla:-6 } }, { id:"C", text:"לשתף את צוות התחזוקה בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ sla:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף צוות התחזוקה.", impact:{ sla:16, profitability:-14 } }] },
+            { title: "📋 כשל בתקן ISO", mitigation: "ISO", text: "מבדק חיצוני מצא ליקויים בנהלי התחזוקה.", options: [{ id:"A", text:"לתקן ולהסמיך מחדש.", impact:{ sla:14, satisfaction:8, profitability:-10 } }, { id:"B", text:"לטפל בליקויים הקריטיים בלבד.", impact:{ sla:-8, satisfaction:-6 } }, { id:"C", text:"לשתף את צוות התחזוקה בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ sla:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף צוות התחזוקה.", impact:{ sla:16, profitability:-14 } }] },
+            { title: "🧹 בעיית ניקיון וחיטוי רכבים", mitigation: "CRM", text: "תלונות על רכבים מלוכלכים פוגעות במוניטין.", options: [{ id:"A", text:"להקים תחנת חיטוי יומית.", impact:{ satisfaction:14, sla:4, profitability:-8 } }, { id:"B", text:"ניקיון שבועי בלבד.", impact:{ satisfaction:-10 } }, { id:"C", text:"לשתף את צוות התחזוקה בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ sla:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף צוות התחזוקה.", impact:{ sla:16, profitability:-14 } }] },
+            { title: "🛰️ כשל מערכות ניטור צי", mitigation: "CYBER", text: "מערכת המעקב אחר הרכבים קרסה.", options: [{ id:"A", text:"שדרוג מערכת הניטור.", impact:{ sla:16, profitability:-12 } }, { id:"B", text:"מעקב ידני זמני.", impact:{ sla:-10, morale:-8 } }, { id:"C", text:"לשתף את צוות התחזוקה בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ sla:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף צוות התחזוקה.", impact:{ sla:16, profitability:-14 } }] },
+            { title: "📈 גידול פתאומי בצי", mitigation: "FINANCE", text: "החברה הוסיפה 100 רכבים — עומס תחזוקה כפול.", options: [{ id:"A", text:"להרחיב את מערך התחזוקה.", impact:{ sla:14, profitability:-16, morale:4 } }, { id:"B", text:"לפזר עומס על הקיים.", impact:{ sla:-14, morale:-12 } }, { id:"C", text:"לשתף את צוות התחזוקה בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ sla:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף צוות התחזוקה.", impact:{ sla:16, profitability:-14 } }] }
         ],
-        7: [ // 💰 Finance — profitability(ראשי), satisfaction, sla, morale
-            { title: "💳 חריגה תקציבית", mitigation: "ISO", text: "המחלקות חרגו מהתקציב הרבעוני ב-20%.", options: [{ id:"A", text:"הקפאת תקציבים מיידית.", impact:{ profitability:16, morale:-15, sla:-6 } }, { id:"B", text:"לאשר חריגה חד-פעמית.", impact:{ profitability:-12, morale:6 } }] },
-            { title: "📊 ביקורת מס", mitigation: "ISO", text: "רשות המסים פתחה ביקורת על הדוחות.", options: [{ id:"A", text:"לשכור יועצים ולשתף פעולה.", impact:{ profitability:-10, satisfaction:4 } }, { id:"B", text:"למזער דיווח ולקוות לטוב.", impact:{ profitability:6, satisfaction:-12 } }] },
-            { title: "💹 הזדמנות גידור מטבע", mitigation: "ISO", text: "תנודתיות מטבע מאיימת על רווחים בחו\"ל.", options: [{ id:"A", text:"לבצע גידור פיננסי.", impact:{ profitability:12, sla:-4 } }, { id:"B", text:"לא לגדר ולקחת סיכון.", impact:{ profitability:-14 } }] },
-            { title: "🏦 ריבית הלוואות עלתה", mitigation: "ISO", text: "הבנק העלה את הריבית על האשראי של החברה.", options: [{ id:"A", text:"למחזר חוב בתנאים טובים.", impact:{ profitability:10, morale:-4 } }, { id:"B", text:"להמשיך עם החוב הקיים.", impact:{ profitability:-12 } }] },
-            { title: "🧾 דרישת שקיפות פיננסית", mitigation: "ISO", text: "המשקיעים דורשים דיווח מפורט יותר.", options: [{ id:"A", text:"להטמיע מערכת ERP שקופה.", impact:{ profitability:-10, sla:8, satisfaction:6 } }, { id:"B", text:"להסתפק בדוח רבעוני.", impact:{ profitability:2, satisfaction:-6 } }] },
-            { title: "💸 לחץ להפחתת מחירים", mitigation: "CRM", text: "השוק התחרותי דורש הורדת תעריפים.", options: [{ id:"A", text:"להוריד מחירים ולספוג.", impact:{ profitability:-16, satisfaction:14 } }, { id:"B", text:"לשמור על תמחור גבוה.", impact:{ profitability:10, satisfaction:-12 } }] },
-            { title: "📉 מחיקת חוב אבוד", mitigation: "ISO", text: "לקוח עסקי גדול לא משלם חובות עבר.", options: [{ id:"A", text:"לפעול משפטית לגבייה.", impact:{ profitability:8, satisfaction:-6 } }, { id:"B", text:"למחוק את החוב ולהמשיך.", impact:{ profitability:-12 } }] },
-            { title: "🎯 הצעת ייעול תהליכי גבייה", mitigation: "ISO", text: "אוטומציה יכולה לזרז את הגבייה.", options: [{ id:"A", text:"להשקיע במערכת גבייה אוטומטית.", impact:{ profitability:12, sla:6, morale:-4 } }, { id:"B", text:"להמשיך בגבייה ידנית.", impact:{ profitability:-6, morale:-6 } }] },
-            { title: "🏢 הזדמנות חיסכון בשכירות", mitigation: "SERVICE", text: "אפשר לעבור למשרדים זולים יותר.", options: [{ id:"A", text:"לעבור ולחסוך.", impact:{ profitability:14, morale:-10 } }, { id:"B", text:"להישאר במיקום המרכזי.", impact:{ profitability:-6, morale:6, satisfaction:4 } }] },
-            { title: "📈 דרישת תקצוב חדשנות", mitigation: "SERVICE", text: "מחלקת הפיתוח מבקשת תקציב למחקר.", options: [{ id:"A", text:"להקצות תקציב חדשנות.", impact:{ profitability:-12, satisfaction:8, morale:8 } }, { id:"B", text:"לדחות לשנה הבאה.", impact:{ profitability:6, morale:-8 } }] }
+        7: [ // 💰 Finance
+            { title: "💳 חריגה תקציבית", mitigation: "FINANCE", text: "המחלקות חרגו מהתקציב הרבעוני ב-20%.", options: [{ id:"A", text:"הקפאת תקציבים מיידית.", impact:{ profitability:16, morale:-15, sla:-6 } }, { id:"B", text:"לאשר חריגה חד-פעמית.", impact:{ profitability:-12, morale:6 } }, { id:"C", text:"לשתף את הדירקטוריון בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ profitability:12, satisfaction:6, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הדירקטוריון.", impact:{ profitability:16, sla:-10 } }] },
+            { title: "📊 ביקורת מס", mitigation: "FINANCE", text: "רשות המסים פתחה ביקורת על הדוחות.", options: [{ id:"A", text:"לשכור יועצים ולשתף פעולה.", impact:{ profitability:-10, satisfaction:4 } }, { id:"B", text:"למזער דיווח ולקוות לטוב.", impact:{ profitability:6, satisfaction:-12 } }, { id:"C", text:"לשתף את הדירקטוריון בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ profitability:12, satisfaction:6, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הדירקטוריון.", impact:{ profitability:16, sla:-10 } }] },
+            { title: "💹 הזדמנות גידור מטבע", mitigation: "FINANCE", text: "תנודתיות מטבע מאיימת על רווחים בחו\"ל.", options: [{ id:"A", text:"לבצע גידור פיננסי.", impact:{ profitability:12, sla:-4 } }, { id:"B", text:"לא לגדר ולקחת סיכון.", impact:{ profitability:-14 } }, { id:"C", text:"לשתף את הדירקטוריון בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ profitability:12, satisfaction:6, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הדירקטוריון.", impact:{ profitability:16, sla:-10 } }] },
+            { title: "🏦 ריבית הלוואות עלתה", mitigation: "FINANCE", text: "הבנק העלה את הריבית על האשראי של החברה.", options: [{ id:"A", text:"למחזר חוב בתנאים טובים.", impact:{ profitability:10, morale:-4 } }, { id:"B", text:"להמשיך עם החוב הקיים.", impact:{ profitability:-12 } }, { id:"C", text:"לשתף את הדירקטוריון בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ profitability:12, satisfaction:6, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הדירקטוריון.", impact:{ profitability:16, sla:-10 } }] },
+            { title: "🧾 דרישת שקיפות פיננסית", mitigation: "ISO", text: "המשקיעים דורשים דיווח מפורט יותר.", options: [{ id:"A", text:"להטמיע מערכת ERP שקופה.", impact:{ profitability:-10, sla:8, satisfaction:6 } }, { id:"B", text:"להסתפק בדוח רבעוני.", impact:{ profitability:2, satisfaction:-6 } }, { id:"C", text:"לשתף את הדירקטוריון בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ profitability:12, satisfaction:6, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הדירקטוריון.", impact:{ profitability:16, sla:-10 } }] },
+            { title: "💸 לחץ להפחתת מחירים", mitigation: "CRM", text: "השוק התחרותי דורש הורדת תעריפים.", options: [{ id:"A", text:"להוריד מחירים ולספוג.", impact:{ profitability:-16, satisfaction:14 } }, { id:"B", text:"לשמור על תמחור גבוה.", impact:{ profitability:10, satisfaction:-12 } }, { id:"C", text:"לשתף את הדירקטוריון בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ profitability:12, satisfaction:6, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הדירקטוריון.", impact:{ profitability:16, sla:-10 } }] },
+            { title: "📉 מחיקת חוב אבוד", mitigation: "FINANCE", text: "לקוח עסקי גדול לא משלם חובות עבר.", options: [{ id:"A", text:"לפעול משפטית לגבייה.", impact:{ profitability:8, satisfaction:-6 } }, { id:"B", text:"למחוק את החוב ולהמשיך.", impact:{ profitability:-12 } }, { id:"C", text:"לשתף את הדירקטוריון בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ profitability:12, satisfaction:6, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הדירקטוריון.", impact:{ profitability:16, sla:-10 } }] },
+            { title: "🎯 הצעת ייעול תהליכי גבייה", mitigation: "FINANCE", text: "אוטומציה יכולה לזרז את הגבייה.", options: [{ id:"A", text:"להשקיע במערכת גבייה אוטומטית.", impact:{ profitability:12, sla:6, morale:-4 } }, { id:"B", text:"להמשיך בגבייה ידנית.", impact:{ profitability:-6, morale:-6 } }, { id:"C", text:"לשתף את הדירקטוריון בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ profitability:12, satisfaction:6, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הדירקטוריון.", impact:{ profitability:16, sla:-10 } }] },
+            { title: "🏢 הזדמנות חיסכון בשכירות", mitigation: "FINANCE", text: "אפשר לעבור למשרדים זולים יותר.", options: [{ id:"A", text:"לעבור ולחסוך.", impact:{ profitability:14, morale:-10 } }, { id:"B", text:"להישאר במיקום המרכזי.", impact:{ profitability:-6, morale:6, satisfaction:4 } }, { id:"C", text:"לשתף את הדירקטוריון בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ profitability:12, satisfaction:6, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הדירקטוריון.", impact:{ profitability:16, sla:-10 } }] },
+            { title: "📈 דרישת תקצוב חדשנות", mitigation: "FINANCE", text: "מחלקת הפיתוח מבקשת תקציב למחקר.", options: [{ id:"A", text:"להקצות תקציב חדשנות.", impact:{ profitability:-12, satisfaction:8, morale:8 } }, { id:"B", text:"לדחות לשנה הבאה.", impact:{ profitability:6, morale:-8 } }, { id:"C", text:"לשתף את הדירקטוריון בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ profitability:12, satisfaction:6, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף הדירקטוריון.", impact:{ profitability:16, sla:-10 } }] }
         ],
-        8: [ // 🛡️ Safety & Compliance — cyber(ראשי), satisfaction, sla, profitability
-            { title: "🔓 מתקפת כופרה", mitigation: "ISO", text: "האקרים הצפינו חלק ממערכות החברה ודורשים כופר.", options: [{ id:"A", text:"לשחזר מגיבוי + לחזק הגנות.", impact:{ cyber:18, profitability:-16, sla:-6 } }, { id:"B", text:"לשלם את הכופר.", impact:{ cyber:-10, profitability:-20 } }] },
-            { title: "📋 כשל בתקן אבטחה", mitigation: "ISO", text: "מבדק חיצוני מצא פערים בתקן ISO 27001.", options: [{ id:"A", text:"לתקן ולהסמיך מחדש.", impact:{ cyber:16, profitability:-12 } }, { id:"B", text:"לטפל בקריטי בלבד.", impact:{ cyber:-8, satisfaction:-6 } }] },
-            { title: "🎣 קמפיין פישינג נגד עובדים", mitigation: "SERVICE", text: "מיילים מתחזים מנסים לגנוב סיסמאות עובדים.", options: [{ id:"A", text:"הדרכת מודעות סייבר מקיפה.", impact:{ cyber:14, profitability:-8 } }, { id:"B", text:"לשלוח אזהרה במייל בלבד.", impact:{ cyber:-10 } }] },
-            { title: "🔑 בקרת גישה רופפת", mitigation: "ISO", text: "התגלה שעובדים רבים מדי בעלי הרשאות-על.", options: [{ id:"A", text:"להטמיע ניהול הרשאות מדורג.", impact:{ cyber:16, sla:-4 } }, { id:"B", text:"להשאיר את המצב הקיים.", impact:{ cyber:-14 } }] },
-            { title: "🌐 פרצה ב-API ציבורי", mitigation: "ISO", text: "חוקר אבטחה דיווח על פרצה בממשק החיצוני.", options: [{ id:"A", text:"לסגור ולתקן מיידית.", impact:{ cyber:18, sla:-8, profitability:-6 } }, { id:"B", text:"לתקן בעדכון המתוכנן הבא.", impact:{ cyber:-16, satisfaction:-8 } }] },
-            { title: "📡 דרישת ניטור 24/7", mitigation: "ISO", text: "צריך מרכז ניטור אבטחה מסביב לשעון.", options: [{ id:"A", text:"להקים SOC עם ניטור רציף.", impact:{ cyber:16, profitability:-14 } }, { id:"B", text:"ניטור בשעות עבודה בלבד.", impact:{ cyber:-6, sla:2 } }] },
-            { title: "🔐 דרישת הצפנת נתונים", mitigation: "CRM", text: "רגולציה מחייבת הצפנת כל נתוני הנוסעים.", options: [{ id:"A", text:"להצפין הכל מקצה לקצה.", impact:{ cyber:18, profitability:-12, satisfaction:8 } }, { id:"B", text:"להצפין נתונים רגישים בלבד.", impact:{ cyber:4, satisfaction:-4 } }] },
-            { title: "📰 חשיפת דליפת מידע", mitigation: "CRM", text: "התקשורת חשפה דליפת נתונים ישנה שלא דווחה.", options: [{ id:"A", text:"שקיפות מלאה + יידוע נפגעים.", impact:{ cyber:10, satisfaction:8, profitability:-12 } }, { id:"B", text:"למזער ולהכחיש.", impact:{ cyber:-12, satisfaction:-18 } }] },
-            { title: "🛡️ הצעת ביטוח סייבר", mitigation: "ISO", text: "אפשר לרכוש פוליסת ביטוח נגד מתקפות.", options: [{ id:"A", text:"לרכוש ביטוח סייבר מקיף.", impact:{ cyber:10, profitability:-10 } }, { id:"B", text:"לחסוך ולקחת סיכון.", impact:{ cyber:-6, profitability:4 } }] },
-            { title: "⚙️ עדכוני אבטחה דחויים", mitigation: "ISO", text: "מערכות רבות רצות על גרסאות ישנות ופגיעות.", options: [{ id:"A", text:"מבצע עדכון מערכות כולל.", impact:{ cyber:16, sla:-8, profitability:-6 } }, { id:"B", text:"לעדכן בהדרגה לאורך זמן.", impact:{ cyber:-8 } }] }
+        8: [ // 🛡️ Safety & Compliance
+            { title: "🔓 מתקפת כופרה", mitigation: "CYBER", text: "האקרים הצפינו חלק ממערכות החברה ודורשים כופר.", options: [{ id:"A", text:"לשחזר מגיבוי + לחזק הגנות.", impact:{ cyber:18, profitability:-16, sla:-6 } }, { id:"B", text:"לשלם את הכופר.", impact:{ cyber:-10, profitability:-20 } }, { id:"C", text:"לשתף את צוות האבטחה בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ cyber:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף צוות האבטחה.", impact:{ cyber:16, profitability:-14, sla:-4 } }] },
+            { title: "📋 כשל בתקן אבטחה", mitigation: "CYBER", text: "מבדק חיצוני מצא פערים בתקן ISO 27001.", options: [{ id:"A", text:"לתקן ולהסמיך מחדש.", impact:{ cyber:16, profitability:-12 } }, { id:"B", text:"לטפל בקריטי בלבד.", impact:{ cyber:-8, satisfaction:-6 } }, { id:"C", text:"לשתף את צוות האבטחה בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ cyber:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף צוות האבטחה.", impact:{ cyber:16, profitability:-14, sla:-4 } }] },
+            { title: "🎣 קמפיין פישינג נגד עובדים", mitigation: "CYBER", text: "מיילים מתחזים מנסים לגנוב סיסמאות עובדים.", options: [{ id:"A", text:"הדרכת מודעות סייבר מקיפה.", impact:{ cyber:14, profitability:-8 } }, { id:"B", text:"לשלוח אזהרה במייל בלבד.", impact:{ cyber:-10 } }, { id:"C", text:"לשתף את צוות האבטחה בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ cyber:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף צוות האבטחה.", impact:{ cyber:16, profitability:-14, sla:-4 } }] },
+            { title: "🔑 בקרת גישה רופפת", mitigation: "CYBER", text: "התגלה שעובדים רבים מדי בעלי הרשאות-על.", options: [{ id:"A", text:"להטמיע ניהול הרשאות מדורג.", impact:{ cyber:16, sla:-4 } }, { id:"B", text:"להשאיר את המצב הקיים.", impact:{ cyber:-14 } }, { id:"C", text:"לשתף את צוות האבטחה בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ cyber:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף צוות האבטחה.", impact:{ cyber:16, profitability:-14, sla:-4 } }] },
+            { title: "🌐 פרצה ב-API ציבורי", mitigation: "CYBER", text: "חוקר אבטחה דיווח על פרצה בממשק החיצוני.", options: [{ id:"A", text:"לסגור ולתקן מיידית.", impact:{ cyber:18, sla:-8, profitability:-6 } }, { id:"B", text:"לתקן בעדכון המתוכנן הבא.", impact:{ cyber:-16, satisfaction:-8 } }, { id:"C", text:"לשתף את צוות האבטחה בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ cyber:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף צוות האבטחה.", impact:{ cyber:16, profitability:-14, sla:-4 } }] },
+            { title: "📡 דרישת ניטור 24/7", mitigation: "CYBER", text: "צריך מרכז ניטור אבטחה מסביב לשעון.", options: [{ id:"A", text:"להקים SOC עם ניטור רציף.", impact:{ cyber:16, profitability:-14 } }, { id:"B", text:"ניטור בשעות עבודה בלבד.", impact:{ cyber:-6, sla:2 } }, { id:"C", text:"לשתף את צוות האבטחה בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ cyber:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף צוות האבטחה.", impact:{ cyber:16, profitability:-14, sla:-4 } }] },
+            { title: "🔐 דרישת הצפנת נתונים", mitigation: "CYBER", text: "רגולציה מחייבת הצפנת כל נתוני הנוסעים.", options: [{ id:"A", text:"להצפין הכל מקצה לקצה.", impact:{ cyber:18, profitability:-12, satisfaction:8 } }, { id:"B", text:"להצפין נתונים רגישים בלבד.", impact:{ cyber:4, satisfaction:-4 } }, { id:"C", text:"לשתף את צוות האבטחה בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ cyber:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף צוות האבטחה.", impact:{ cyber:16, profitability:-14, sla:-4 } }] },
+            { title: "📰 חשיפת דליפת מידע", mitigation: "CYBER", text: "התקשורת חשפה דליפת נתונים ישנה שלא דווחה.", options: [{ id:"A", text:"שקיפות מלאה + יידוע נפגעים.", impact:{ cyber:10, satisfaction:8, profitability:-12 } }, { id:"B", text:"למזער ולהכחיש.", impact:{ cyber:-12, satisfaction:-18 } }, { id:"C", text:"לשתף את צוות האבטחה בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ cyber:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף צוות האבטחה.", impact:{ cyber:16, profitability:-14, sla:-4 } }] },
+            { title: "🛡️ הצעת ביטוח סייבר", mitigation: "CYBER", text: "אפשר לרכוש פוליסת ביטוח נגד מתקפות.", options: [{ id:"A", text:"לרכוש ביטוח סייבר מקיף.", impact:{ cyber:10, profitability:-10 } }, { id:"B", text:"לחסוך ולקחת סיכון.", impact:{ cyber:-6, profitability:4 } }, { id:"C", text:"לשתף את צוות האבטחה בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ cyber:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף צוות האבטחה.", impact:{ cyber:16, profitability:-14, sla:-4 } }] },
+            { title: "⚙️ עדכוני אבטחה דחויים", mitigation: "CYBER", text: "מערכות רבות רצות על גרסאות ישנות ופגיעות.", options: [{ id:"A", text:"מבצע עדכון מערכות כולל.", impact:{ cyber:16, sla:-8, profitability:-6 } }, { id:"B", text:"לעדכן בהדרגה לאורך זמן.", impact:{ cyber:-8 } }, { id:"C", text:"לשתף את צוות האבטחה בקבלת ההחלטה ולגבש מהלך מוסכם.", impact:{ cyber:12, profitability:-8, morale:8 } }, { id:"D", text:"ליישם פתרון שורש מערכתי ארוך-טווח בשיתוף צוות האבטחה.", impact:{ cyber:16, profitability:-14, sla:-4 } }] }
         ]
-    };
+    };;;
 
     let currentTeamId = null;
     let teamState = null;
@@ -2250,21 +2339,73 @@ window.toggleFaqItem = function(element) {
             teamState.kpi.morale = Math.min(100, teamState.kpi.morale + 10);
             teamState.chosenPreventionName = "🟣 סדנאות שירות ותמיכה";
             teamState.preventionKey = "SERVICE";
+        } else if (selectedProg === "FINANCE") {
+            activeGlobalInvestments.push("FINANCE");
+            if (teamState.kpi.profitability !== undefined) {
+                teamState.kpi.profitability = Math.min(100, teamState.kpi.profitability + 10);
+            }
+            teamState.chosenPreventionName = "🟠 ניהול סיכונים פיננסי";
+            teamState.preventionKey = "FINANCE";
+        } else if (selectedProg === "CYBER") {
+            activeGlobalInvestments.push("CYBER");
+            // אבטחה אם קיימת, אחרת חיזוק רווחיות
+            if (teamState.kpi.cyber !== undefined) {
+                teamState.kpi.cyber = Math.min(100, teamState.kpi.cyber + 10);
+            } else if (teamState.kpi.profitability !== undefined) {
+                teamState.kpi.profitability = Math.min(100, teamState.kpi.profitability + 10);
+            }
+            teamState.chosenPreventionName = "🔴 מערך אבטחת מידע";
+            teamState.preventionKey = "CYBER";
         } else {
             teamState.chosenPreventionName = "❌ ללא תוכנית מנע";
             teamState.preventionKey = "NONE";
         }
 
         document.getElementById('teamSetupBlock').style.display = 'none';
-        document.getElementById('teamGameplayBlock').style.display = 'block';
+        document.getElementById('teamWaitingBlock').style.display = 'block';
+        document.getElementById('teamGameplayBlock').style.display = 'none';
         document.getElementById('teamFinishedPanel').style.display = 'none';
         document.getElementById('activePlayingTeamTitle').innerText = `${profile.icon} חדר מצב - ${teamState.name}`;
 
         renderTeamKPIBars();
 
-        // סנכרון מיידי לענן — המנהל יראה את הצוות מרגע ההתחלה
+        // סנכרון לענן בסטטוס 'נעול' — ממתין שהמנחה יפעיל
+        teamState.shiftStarted = false;
+        syncTeamToCloud('locked');
+
+        // מצב מקוון: ממתינים למנחה. מצב לא מקוון: מציגים כפתור התחלה ידנית לצוות
+        if (currentUser && db) {
+            document.getElementById('waitingOnlineMsg').style.display = 'block';
+            document.getElementById('waitingOfflineStart').style.display = 'none';
+            startTeamSelfListener();
+        } else {
+            console.warn("⚠️ מצב לא מקוון — הצוות יפעיל את המשמרת ידנית");
+            document.getElementById('waitingOnlineMsg').style.display = 'none';
+            document.getElementById('waitingOfflineStart').style.display = 'block';
+        }
+    }
+
+    // הפעלת המשמרת בפועל — נקראת כשהמנחה לוחץ "הפעל משמרת" (דרך הענן)
+    // התחלה ידנית של הצוות (מצב לא מקוון בלבד)
+    function manualStartShift() {
+        if (!teamState || teamState.shiftStarted) return;
+        beginTeamShift();
+    }
+
+    function beginTeamShift() {
+        if (!teamState || teamState.shiftStarted) return;
+        teamState.shiftStarted = true;
+
+        const profile = allPossibleProfiles[teamState.teamId];
+        document.getElementById('teamWaitingBlock').style.display = 'none';
+        document.getElementById('teamSetupBlock').style.display = 'none';
+        document.getElementById('teamGameplayBlock').style.display = 'block';
+        document.getElementById('teamFinishedPanel').style.display = 'none';
+        document.getElementById('activePlayingTeamTitle').innerText = `${profile.icon} חדר מצב - ${teamState.name}`;
+
+        renderTeamKPIBars();
         syncTeamToCloud('active');
-        
+
         gameTimeSeconds = 0;
         if(gameTimerInterval) clearInterval(gameTimerInterval);
 
@@ -2293,16 +2434,18 @@ window.toggleFaqItem = function(element) {
     // בונה את לוח האירועים של הצוות הנוכחי לפי הגדרות המנהל
     let scheduledTeamEvents = [];
     function buildTeamEventSchedule() {
-        const startMin = parseFloat(document.getElementById('eventStartConfigInput').value) || 1;
         const intervalMin = parseFloat(document.getElementById('eventIntervalConfigInput').value) || 3;
         let count = parseInt(document.getElementById('eventCountConfigInput').value) || 3;
 
         const pool = (TEAM_EVENTS[teamState.teamId] || []).slice();
         count = Math.min(count, pool.length);
 
+        const FIRST_EVENT_SECOND = 10; // האירוע הראשון תמיד אחרי 10 שניות
+
         scheduledTeamEvents = [];
         for (let i = 0; i < count; i++) {
-            let triggerSecond = Math.round((startMin + i * intervalMin) * 60);
+            // האירוע הראשון ב-10 שניות, ואז כל אירוע מרווח ב-intervalMin מהקודם
+            let triggerSecond = FIRST_EVENT_SECOND + Math.round(i * intervalMin * 60);
             if (triggerSecond >= gameTotalSeconds) break; // לא לתזמן אחרי סוף המשחק
             scheduledTeamEvents.push({
                 ...pool[i],
@@ -2357,12 +2500,48 @@ window.toggleFaqItem = function(element) {
             activeCrisis.options.forEach(opt => {
                 optsDiv.innerHTML += `
                     <div class="option-item" onclick="document.getElementById('opt_${opt.id}').click()">
-                        <input type="radio" name="crisisOptionSelectGroup" value="${opt.id}" id="opt_${opt.id}">
+                        <input type="radio" name="crisisOptionSelectGroup" value="${opt.id}" id="opt_${opt.id}" onchange="onCrisisOptionChange()">
                         <label style="cursor:pointer;" for="opt_${opt.id}"><strong>אפשרות ${opt.id}:</strong> ${opt.text}</label>
                     </div>
                 `;
             });
+
+            // אתחול החלופה הפתוחה (E)
+            document.getElementById('opt_E').checked = false;
+            document.getElementById('opt_E').onchange = onCrisisOptionChange;
+            document.getElementById('openOptionText').value = '';
+            document.getElementById('openOptionFields').style.display = 'none';
+
+            // בניית בוררי השפעה לכל מדד של הצוות
+            const labels = { satisfaction: "שביעות רצון", sla: "SLA", profitability: "רווחיות", morale: "מורל", cyber: "אבטחה" };
+            const grid = document.getElementById('openOptionImpactGrid');
+            grid.innerHTML = '';
+            for (let key in teamState.kpi) {
+                grid.innerHTML += `
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:bold;">${labels[key] || key}:</label>
+                        <select id="openImpact_${key}" class="input-control" style="padding:4px;">
+                            <option value="20">+20</option>
+                            <option value="15">+15</option>
+                            <option value="10">+10</option>
+                            <option value="5">+5</option>
+                            <option value="0" selected>0</option>
+                            <option value="-5">-5</option>
+                            <option value="-10">-10</option>
+                            <option value="-15">-15</option>
+                            <option value="-20">-20</option>
+                        </select>
+                    </div>
+                `;
+            }
         }
+    }
+
+    // הצגה/הסתרה של שדות החלופה הפתוחה לפי הבחירה
+    function onCrisisOptionChange() {
+        const checked = document.querySelector('input[name="crisisOptionSelectGroup"]:checked');
+        const isOpen = checked && checked.value === 'E';
+        document.getElementById('openOptionFields').style.display = isOpen ? 'block' : 'none';
     }
 
     function updateActiveCrisisTimer() {
@@ -2403,13 +2582,34 @@ window.toggleFaqItem = function(element) {
         }
 
         let choiceId = checked.value;
-        let optObj = activeCrisis.options.find(o => o.id === choiceId);
+        let optObj;
+        let choiceLabel;
+
+        if (choiceId === 'E') {
+            // חלופה פתוחה — הסטודנט כתב פעולה ובחר השפעות
+            const openText = document.getElementById('openOptionText').value.trim();
+            if (openText.length < 5) {
+                showSystemNotification("חוסר בנתונים", "יש לתאר את הפעולה הפתוחה (לפחות 5 תווים)!", true);
+                return;
+            }
+            let impact = {};
+            for (let key in teamState.kpi) {
+                const sel = document.getElementById('openImpact_' + key);
+                if (sel) impact[key] = parseInt(sel.value) || 0;
+            }
+            optObj = { id: 'E', text: openText, impact: impact };
+            choiceLabel = 'חלופה פתוחה: ' + openText;
+        } else {
+            optObj = activeCrisis.options.find(o => o.id === choiceId);
+            choiceLabel = choiceId;
+        }
+
         let elapsed = gameTimeSeconds - crisisOpenedTime;
         let timeBonus = (elapsed <= 60) ? 10 : 5;
 
         teamState.kpi[teamState.mainKpiKey] = Math.min(100, teamState.kpi[teamState.mainKpiKey] + timeBonus);
 
-        let isProtected = activeGlobalInvestments.includes(activeCrisis.mitigation);
+        let isProtected = activeCrisis.mitigation && activeGlobalInvestments.includes(activeCrisis.mitigation);
         for(let key in optObj.impact) {
             if (teamState.kpi[key] !== undefined) {
                 let change = optObj.impact[key];
@@ -2418,9 +2618,11 @@ window.toggleFaqItem = function(element) {
             }
         }
 
-        teamState.history.push({ title: activeCrisis.title, choice: choiceId, text: just });
+        teamState.history.push({ title: activeCrisis.title, choice: choiceLabel, text: just });
         activeCrisis = null;
         document.getElementById('teamCrisisJustificationInput').value = '';
+        document.getElementById('openOptionText').value = '';
+        document.getElementById('openOptionFields').style.display = 'none';
         document.getElementById('teamNoCrisisView').style.display = 'block';
         document.getElementById('teamActiveCrisisView').style.display = 'none';
         renderTeamKPIBars();
@@ -2444,7 +2646,8 @@ window.toggleFaqItem = function(element) {
             chosenPreventionName: teamState.chosenPreventionName,
             strategy: teamState.strategy,
             recoveryPlan: teamState.recoveryPlan,
-            status: status,               // 'active' או 'finished'
+            status: status,               // 'locked' | 'active' | 'finished'
+            startSignal: (teamState.shiftStarted === true), // האם המנחה הפעיל
             lastUpdate: Date.now()
         };
 
@@ -2461,6 +2664,27 @@ window.toggleFaqItem = function(element) {
         } else {
             console.warn("⚠️ Synced locally only — no cloud connection");
         }
+    }
+
+    // מאזין-עצמי של הצוות: ממתין לאות ההפעלה מהמנחה
+    let teamSelfUnsubscribe = null;
+    function startTeamSelfListener() {
+        if (!currentUser || !db || !teamState) {
+            console.warn("⚠️ Team self-listener not started (no cloud) — מצב לא מקוון");
+            return;
+        }
+        if (teamSelfUnsubscribe) teamSelfUnsubscribe();
+        const teamDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'results', String(teamState.teamId));
+        console.log(`👂 Team ${teamState.teamId} listening for facilitator start signal...`);
+        teamSelfUnsubscribe = onSnapshot(teamDocRef, (snap) => {
+            if (!snap.exists()) return;
+            const data = snap.data();
+            if (data.startSignal === true && teamState && !teamState.shiftStarted) {
+                console.log(`▶️ Start signal received for team ${teamState.teamId}!`);
+                if (teamSelfUnsubscribe) { teamSelfUnsubscribe(); teamSelfUnsubscribe = null; }
+                beginTeamShift();
+            }
+        }, (err) => console.error("Team self-listener error:", err.code, err.message));
     }
 
     async function finishActiveTeamShift() {
@@ -2567,12 +2791,18 @@ window.toggleFaqItem = function(element) {
                 if (data.preventionKey === "CRM") preventionBadgeColor = "bg-green";
                 if (data.preventionKey === "ISO") preventionBadgeColor = "bg-blue";
                 if (data.preventionKey === "SERVICE") preventionBadgeColor = "bg-purple";
+                if (data.preventionKey === "FINANCE") preventionBadgeColor = "bg-orange";
+                if (data.preventionKey === "CYBER") preventionBadgeColor = "bg-red";
 
                 let chosenPreventionText = data.chosenPreventionName || "ללא תוכנית מנע";
 
                 // תג סטטוס בזמן אמת
                 let statusBadge = '';
-                if (data.status === 'active') {
+                let startButton = '';
+                if (data.status === 'locked' && data.startSignal !== true) {
+                    statusBadge = `<span style="background:#fff3cd; color:#856404; padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:bold;">⏳ ממתין להפעלה</span>`;
+                    startButton = `<button class="btn btn-success" style="width:100%; margin:8px 0; padding:10px; font-size:0.95rem;" onclick="facilitatorStartTeam(${i})">▶️ הפעל משמרת לצוות זה</button>`;
+                } else if (data.status === 'active') {
                     statusBadge = `<span style="background:#fef3c7; color:#92400e; padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:bold;">🔴 משחק כעת</span>`;
                 } else if (data.status === 'finished') {
                     statusBadge = `<span style="background:#d1fae5; color:#065f46; padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:bold;">✅ הסתיים</span>`;
@@ -2599,7 +2829,7 @@ window.toggleFaqItem = function(element) {
                             <span class="badge ${preventionBadgeColor}">${chosenPreventionText}</span>
                         </div>
                         <hr style="margin:8px 0; border-color:#e2e8f0;">
-                        
+                        ${startButton}
                         <p style="font-weight:bold; font-size:0.9rem; color:#555;">📋 אסטרטגיית מנע שגובשה:</p>
                         ${strategySnippet}
                         ${recoverySnippet}
@@ -2907,12 +3137,41 @@ window.toggleFaqItem = function(element) {
         );
     }
 
+    // המנחה מפעיל משמרת של צוות ספציפי — כותב אות הפעלה לענן
+    async function facilitatorStartTeam(teamId) {
+        if (!currentUser || !db) {
+            showSystemNotification("אין חיבור ענן", "הפעלה מרחוק דורשת חיבור לענן. ודאו שהמערכת מחוברת.", true);
+            return;
+        }
+        try {
+            const teamDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'results', String(teamId));
+            const snap = await getDoc(teamDocRef);
+            if (!snap.exists()) {
+                showSystemNotification("שגיאה", "לא נמצאו נתוני צוות. ודאו שהצוות נעל אסטרטגיה.", true);
+                return;
+            }
+            const data = snap.data();
+            data.startSignal = true;
+            data.status = 'active';
+            data.lastUpdate = Date.now();
+            await setDoc(teamDocRef, data);
+            console.log(`▶️ Facilitator started team ${teamId}`);
+            showSystemNotification("המשמרת הופעלה", `המשמרת של צוות ${teamId} הופעלה בהצלחה!`);
+        } catch (err) {
+            console.error("Failed to start team:", err.code, err.message);
+            showSystemNotification("שגיאה", "ההפעלה נכשלה: " + (err.code || "שגיאה"), true);
+        }
+    }
+
     // קישור פונקציות לחלון הגלובלי
     window.switchActiveTab = switchActiveTab;
+    window.facilitatorStartTeam = facilitatorStartTeam;
+    window.manualStartShift = manualStartShift;
     window.adjustTeamDropdownOptions = adjustTeamDropdownOptions;
     window.initiateTeamActiveGame = initiateTeamActiveGame;
     window.validateAndStartGame = validateAndStartGame;
     window.submitTeamActiveDecision = submitTeamActiveDecision;
+    window.onCrisisOptionChange = onCrisisOptionChange;
     window.resetTeamViewToSetup = resetTeamViewToSetup;
     window.renderHqDashboardGrid = renderHqDashboardGrid;
     window.exportToCSVReport = exportToCSVReport;
