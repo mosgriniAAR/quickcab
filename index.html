@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QuickCab - סימולציית ניהול איכות ומטה מרכזית</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --taxi-yellow: #f1c40f;
@@ -88,6 +89,20 @@
             transition: background 0.15s, border-color 0.15s; text-align: right;
         }
         .welcome-shortcut:hover { background: #eaf3ff; border-color: var(--blue-info); }
+
+        /* ===== סימולטור בקרת איכות ===== */
+        .sim-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+        @media (max-width: 900px) { .sim-grid { grid-template-columns: 1fr; } }
+        .sim-card { background: var(--card-bg, #fff); padding: 20px; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid #e2e8f0; }
+        .sim-budget-badge { background: #f1f5f9; padding: 8px 14px; border-radius: 20px; font-weight: bold; display: inline-block; margin-bottom: 15px; }
+        .sim-investment-option { display: flex; align-items: center; justify-content: space-between; padding: 12px; margin-bottom: 10px; border: 1px solid #e2e8f0; border-radius: 8px; transition: background 0.2s; }
+        .sim-investment-option:hover { background: #f8fafc; }
+        .sim-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; text-align: center; }
+        .sim-stat-item { background: #f1f5f9; padding: 10px; border-radius: 8px; }
+        .sim-stat-val { font-size: 20px; font-weight: bold; color: var(--blue-info); }
+        .sim-charts-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px; }
+        @media (max-width: 750px) { .sim-charts-container { grid-template-columns: 1fr; } }
+        .sim-chart-box { position: relative; height: 300px; width: 100%; }
 
         /* אינדיקטור סנכרון ענן כיתתי */
         .sync-indicator-container {
@@ -684,6 +699,7 @@
         <button class="btn btn-success" onclick="switchActiveTab('welcome')">🏠 ראשי</button>
         <button class="btn btn-primary" onclick="switchActiveTab('team_station')">👥 עמדת עבודה צוותית</button>
         <button class="btn btn-info" onclick="switchActiveTab('guidelines')">📚 הנחיות המשחק</button>
+        <button class="btn" style="background:#0ea5e9; color:white;" onclick="switchActiveTab('simulator')">🔬 סימולטור בקרת איכות</button>
         <button class="btn btn-danger" onclick="switchActiveTab('admin_control')">🔐 פאנל מנהל</button>
     </div>
 
@@ -1755,6 +1771,43 @@
             </button>
         </div>
 
+    </div>
+
+
+    <!-- ==================== 🔬 סימולטור בקרת איכות ==================== -->
+    <div id="simulator_panel" class="view-panel">
+        <div style="background:#eef6ff; border:1px solid #bcdcff; border-radius:12px; padding:16px 20px; margin-bottom:20px;">
+            <h2 style="border:none; margin:0; color:var(--dark-blue);">🔬 סימולטור בקרת איכות (מגרש ניסויים)</h2>
+            <p style="color:#555; margin-top:8px;">כלי לימוד עצמאי: בחרו השקעות מנע, הריצו סימולציה, וראו כיצד הן משפיעות על איכות השירות בעזרת תרשימי בקרה סטטיסטיים. <strong>הכלי לא משפיע על הציון במשחק</strong> — הוא נועד להבנת העיקרון.</p>
+        </div>
+
+        <div class="sim-grid">
+            <div class="sim-card">
+                <h3>🛠️ שלב התכנון (Plan)</h3>
+                <div class="sim-budget-badge">💰 תקציב פנוי: <span id="sim-budget-ui">100</span> נקודות</div>
+                <div id="sim-investments-list"></div>
+                <button class="btn" style="background:var(--blue-info); color:white; width:100%; margin-top:10px;" onclick="simRunSimulation()">🚀 הרץ סימולציה (Do &amp; Check)</button>
+            </div>
+
+            <div class="sim-card">
+                <h3>📊 לוח בקרה ומדדי איכות</h3>
+                <div class="sim-stats-grid">
+                    <div class="sim-stat-item"><div>זמן המתנה ממוצע</div><div class="sim-stat-val" id="sim-stat-avg">-</div></div>
+                    <div class="sim-stat-item"><div>חריגות מבקרה</div><div class="sim-stat-val" id="sim-stat-outliers" style="color:var(--red-danger);">-</div></div>
+                    <div class="sim-stat-item"><div>תקלות שנבלמו</div><div class="sim-stat-val" id="sim-stat-mitigated" style="color:var(--green-success);">-</div></div>
+                </div>
+                <div class="sim-charts-container">
+                    <div>
+                        <h4 style="text-align:center; color:var(--slate);">📉 תרשים בקרה (Control Chart)</h4>
+                        <div class="sim-chart-box"><canvas id="simControlChart"></canvas></div>
+                    </div>
+                    <div>
+                        <h4 style="text-align:center; color:var(--slate);">📈 תרשים פארטו (Pareto 80/20)</h4>
+                        <div class="sim-chart-box"><canvas id="simParetoChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
 
@@ -3473,6 +3526,122 @@ window.toggleFaqItem = function(element) {
 
     // טעינת Firebase ברקע (לא חוסם את ממשק המשתמש)
     loadFirebaseAndInit();
+</script>
+
+<!-- ===== סקריפט הסימולטור (עצמאי, נפרד ממנוע המשחק) ===== -->
+<script>
+    (function() {
+        const simInvestmentOptions = [
+            { id: 'gps',      name: 'מערכת ניווט AI עוקפת פקקים',        cost: 40, risk: 'פקק תנועה',           reduction: 12 },
+            { id: 'comms',    name: 'גיבוי שרתי ענן ואפליקציה',          cost: 30, risk: 'תקלת קשר/אפליקציה',   reduction: 10 },
+            { id: 'training', name: 'הדרכת שירות והתמצאות נהגים',        cost: 25, risk: 'איחור נהג',           reduction: 8 },
+            { id: 'insure',   name: 'מנגנון פיצוי לנוסע ומעקב הגעה',     cost: 20, risk: 'נוסע לא הופיע',        reduction: 6 },
+            { id: 'weather',  name: 'ציוד חורף וצמיגי אחיזה מתקדמים',    cost: 15, risk: 'מזג אוויר חריג',      reduction: 10 }
+        ];
+
+        let simBudget = 100;
+        const simSelected = new Set();
+        let simControlChart = null;
+        let simParetoChart = null;
+
+        function simInit() {
+            const c = document.getElementById('sim-investments-list');
+            if (!c) return;
+            c.innerHTML = '';
+            simInvestmentOptions.forEach(opt => {
+                c.innerHTML += `
+                    <div class="sim-investment-option">
+                        <div>
+                            <strong>${opt.name}</strong><br>
+                            <small style="color:#64748b">מפחית סיכון: ${opt.risk} | עלות: ${opt.cost} נק'</small>
+                        </div>
+                        <input type="checkbox" id="sim-chk-${opt.id}" onchange="simToggle('${opt.id}', ${opt.cost})">
+                    </div>`;
+            });
+        }
+
+        window.simToggle = function(id, cost) {
+            const cb = document.getElementById('sim-chk-' + id);
+            if (cb.checked) {
+                if (simBudget - cost >= 0) { simBudget -= cost; simSelected.add(id); }
+                else { cb.checked = false; alert('אין מספיק נקודות תקציב להשקעה זו!'); }
+            } else { simBudget += cost; simSelected.delete(id); }
+            document.getElementById('sim-budget-ui').innerText = simBudget;
+        };
+
+        window.simRunSimulation = function() {
+            if (typeof Chart === 'undefined') { alert('ספריית הגרפים עדיין נטענת — נסו שוב בעוד רגע.'); return; }
+            const sampleSize = 30;
+            let labels = [], waits = [];
+            let incidents = { 'פקק תנועה':0, 'תקלת קשר/אפליקציה':0, 'איחור נהג':0, 'נוסע לא הופיע':0, 'מזג אוויר חריג':0 };
+            let mitigated = 0, t = 0;
+
+            for (let i = 1; i <= sampleSize; i++) {
+                t += Math.floor(Math.random()*4)+1;
+                labels.push('דקה ' + t);
+                let wait = Math.random()*8 + 4;
+                if (Math.random() < 0.40) {
+                    const risks = Object.keys(incidents);
+                    const r = risks[Math.floor(Math.random()*risks.length)];
+                    incidents[r]++;
+                    const match = simInvestmentOptions.find(o => o.risk === r);
+                    if (match && simSelected.has(match.id)) {
+                        wait += Math.max(1, (Math.random()*15+5) - match.reduction);
+                        mitigated++;
+                    } else {
+                        wait += (Math.random()*20+10);
+                    }
+                }
+                waits.push(parseFloat(wait.toFixed(2)));
+            }
+
+            const avg = waits.reduce((a,b)=>a+b,0)/waits.length;
+            const sd = Math.sqrt(waits.map(v=>Math.pow(v-avg,2)).reduce((a,b)=>a+b,0)/waits.length);
+            const ucl = avg + 2*sd, lcl = Math.max(0, avg - 2*sd);
+            const outliers = waits.filter(v => v>ucl || v<lcl).length;
+
+            document.getElementById('sim-stat-avg').innerText = avg.toFixed(2) + " דק'";
+            document.getElementById('sim-stat-outliers').innerText = outliers;
+            document.getElementById('sim-stat-mitigated').innerText = mitigated;
+
+            // תרשים בקרה
+            if (simControlChart) simControlChart.destroy();
+            simControlChart = new Chart(document.getElementById('simControlChart').getContext('2d'), {
+                type: 'line',
+                data: { labels, datasets: [
+                    { label: 'זמן המתנה בפועל', data: waits, borderColor: '#2563eb', tension: 0.1, fill: false },
+                    { label: 'ממוצע (CL)', data: Array(labels.length).fill(avg), borderColor: '#16a34a', borderDash:[5,5], pointRadius:0 },
+                    { label: 'גבול עליון (UCL)', data: Array(labels.length).fill(ucl), borderColor: '#dc2626', borderDash:[2,2], pointRadius:0 },
+                    { label: 'גבול תחתון (LCL)', data: Array(labels.length).fill(lcl), borderColor: '#ca8a04', borderDash:[2,2], pointRadius:0 }
+                ]},
+                options: { responsive:true, maintainAspectRatio:false }
+            });
+
+            // תרשים פארטו
+            if (simParetoChart) simParetoChart.destroy();
+            const sorted = Object.entries(incidents).sort((a,b)=>b[1]-a[1]);
+            const plabels = sorted.map(x=>x[0]); const counts = sorted.map(x=>x[1]);
+            const total = counts.reduce((a,b)=>a+b,0)||1; let cum=0;
+            const cumPct = counts.map(c=>{ cum+=c; return ((cum/total)*100).toFixed(1); });
+            simParetoChart = new Chart(document.getElementById('simParetoChart').getContext('2d'), {
+                data: { labels: plabels, datasets: [
+                    { type:'bar', label:'שכיחות תקלה', data:counts, backgroundColor:'#3b82f6', yAxisID:'y' },
+                    { type:'line', label:'אחוז מצטבר', data:cumPct, borderColor:'#dc2626', backgroundColor:'#dc2626', yAxisID:'y2', tension:0.1 }
+                ]},
+                options: { responsive:true, maintainAspectRatio:false, scales: {
+                    y: { type:'linear', position:'left', title:{display:true, text:'מספר מופעים'} },
+                    y2: { type:'linear', position:'right', min:0, max:100, title:{display:true, text:'אחוז מצטבר (%)'}, grid:{drawOnChartArea:false} }
+                }}
+            });
+        };
+
+        // אתחול הסימולטור (פעם אחת)
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', simInit);
+        } else {
+            simInit();
+        }
+    })();
 </script>
 
 </body>
