@@ -104,6 +104,29 @@
         @media (max-width: 750px) { .sim-charts-container { grid-template-columns: 1fr; } }
         .sim-chart-box { position: relative; height: 300px; width: 100%; }
 
+        /* דף עבודה — שדות טופס */
+        .sim-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 768px) { .sim-grid2 { grid-template-columns: 1fr; } }
+        .sim-fg { margin-bottom: 12px; }
+        .sim-fg label { display: block; font-weight: bold; margin-bottom: 6px; color: var(--dark-blue); }
+        .sim-fg input[type="text"], .sim-fg textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px; font-family: inherit; }
+        .sim-stats-row { display: flex; gap: 15px; margin: 15px 0; text-align: center; justify-content: space-around; background: #f1f5f9; padding: 12px; border-radius: 8px; flex-wrap: wrap; }
+
+        /* 🖨️ הדפסה/PDF — מציג רק את דף העבודה */
+        @media print {
+            body.sim-printing { background: #fff; padding: 0; }
+            body.sim-printing > .container > header,
+            body.sim-printing .navigation-tabs,
+            body.sim-printing .view-panel:not(#simulator_panel),
+            body.sim-printing #sim-investments-list,
+            body.sim-printing .sim-budget-badge,
+            body.sim-printing .btn { display: none !important; }
+            body.sim-printing #simulator_panel { display: block !important; }
+            body.sim-printing .sim-card { box-shadow: none; border: 1px solid #ddd; page-break-inside: avoid; }
+            body.sim-printing .sim-chart-box { max-height: 220px; page-break-inside: avoid; }
+            body.sim-printing textarea, body.sim-printing input { border: 1px solid #ccc; background: #fafafa; }
+        }
+
         /* אינדיקטור סנכרון ענן כיתתי */
         .sync-indicator-container {
             position: absolute;
@@ -700,6 +723,7 @@
         <button class="btn btn-primary" onclick="switchActiveTab('team_station')">👥 עמדת עבודה צוותית</button>
         <button class="btn btn-info" onclick="switchActiveTab('guidelines')">📚 הנחיות המשחק</button>
         <button class="btn" style="background:#0ea5e9; color:white;" onclick="switchActiveTab('simulator')">🔬 סימולטור בקרת איכות</button>
+        <button class="btn" style="background:#7c3aed; color:white;" onclick="switchActiveTab('presentation')">🖥️ מצגת תוצאות</button>
         <button class="btn btn-danger" onclick="switchActiveTab('admin_control')">🔐 פאנל מנהל</button>
     </div>
 
@@ -1774,38 +1798,92 @@
     </div>
 
 
-    <!-- ==================== 🔬 סימולטור בקרת איכות ==================== -->
+    <!-- ==================== 🔬 סימולטור + דף עבודה ==================== -->
     <div id="simulator_panel" class="view-panel">
-        <div style="background:#eef6ff; border:1px solid #bcdcff; border-radius:12px; padding:16px 20px; margin-bottom:20px;">
-            <h2 style="border:none; margin:0; color:var(--dark-blue);">🔬 סימולטור בקרת איכות (מגרש ניסויים)</h2>
-            <p style="color:#555; margin-top:8px;">כלי לימוד עצמאי: בחרו השקעות מנע, הריצו סימולציה, וראו כיצד הן משפיעות על איכות השירות בעזרת תרשימי בקרה סטטיסטיים. <strong>הכלי לא משפיע על הציון במשחק</strong> — הוא נועד להבנת העיקרון.</p>
-        </div>
-
-        <div class="sim-grid">
-            <div class="sim-card">
-                <h3>🛠️ שלב התכנון (Plan)</h3>
-                <div class="sim-budget-badge">💰 תקציב פנוי: <span id="sim-budget-ui">100</span> נקודות</div>
-                <div id="sim-investments-list"></div>
-                <button class="btn" style="background:var(--blue-info); color:white; width:100%; margin-top:10px;" onclick="simRunSimulation()">🚀 הרץ סימולציה (Do &amp; Check)</button>
+        <div id="simWorksheet">
+            <div style="background:#eef6ff; border:1px solid #bcdcff; border-radius:12px; padding:16px 20px; margin-bottom:20px;">
+                <h2 style="border:none; margin:0; color:var(--dark-blue);">🔬 סימולטור בקרת איכות + דף עבודה (PDCA)</h2>
+                <p style="color:#555; margin-top:8px;">כלי לימוד עצמאי מבוסס מעגל PDCA ועקרונות ISO 9001. הריצו שני סיבובי סימולציה, נתחו את הגרפים, ובסוף ייצאו דף עבודה מלא כ-PDF. <strong>הכלי לא משפיע על הציון במשחק.</strong></p>
             </div>
 
-            <div class="sim-card">
-                <h3>📊 לוח בקרה ומדדי איכות</h3>
-                <div class="sim-stats-grid">
-                    <div class="sim-stat-item"><div>זמן המתנה ממוצע</div><div class="sim-stat-val" id="sim-stat-avg">-</div></div>
-                    <div class="sim-stat-item"><div>חריגות מבקרה</div><div class="sim-stat-val" id="sim-stat-outliers" style="color:var(--red-danger);">-</div></div>
-                    <div class="sim-stat-item"><div>תקלות שנבלמו</div><div class="sim-stat-val" id="sim-stat-mitigated" style="color:var(--green-success);">-</div></div>
+            <!-- מקטע 1: פרטי צוות -->
+            <div class="sim-card" style="margin-bottom:20px;">
+                <h3>📋 מקטע 1: פרטי הצוות והזירה</h3>
+                <div class="sim-grid2">
+                    <div class="sim-fg">
+                        <label>שם / מספר הצוות:</label>
+                        <input type="text" id="simTeamName" placeholder="לדוגמה: צוות 3">
+                    </div>
+                    <div class="sim-fg">
+                        <label>העיר שהוקצתה לצוות:</label>
+                        <input type="text" id="simCityName" placeholder="לדוגמה: תל אביב">
+                    </div>
+                </div>
+            </div>
+
+            <!-- מקטע 2: סיבוב 1 -->
+            <div class="sim-card" style="margin-bottom:20px;">
+                <h3>🔍 מקטע 2: סיבוב 1 – ניתוח מצב קיים (Baseline)</h3>
+                <button class="btn" style="background:var(--blue-info); color:white; width:100%;" onclick="simRun(1)">🚀 הרץ סימולציה - סיבוב 1</button>
+                <div class="sim-stats-row">
+                    <div>זמן המתנה ממוצע: <span class="sim-stat-val" id="simAvg1">-</span></div>
+                    <div>חריגות מבקרה: <span class="sim-stat-val" id="simOut1" style="color:var(--red-danger)">-</span></div>
                 </div>
                 <div class="sim-charts-container">
-                    <div>
-                        <h4 style="text-align:center; color:var(--slate);">📉 תרשים בקרה (Control Chart)</h4>
-                        <div class="sim-chart-box"><canvas id="simControlChart"></canvas></div>
-                    </div>
-                    <div>
-                        <h4 style="text-align:center; color:var(--slate);">📈 תרשים פארטו (Pareto 80/20)</h4>
-                        <div class="sim-chart-box"><canvas id="simParetoChart"></canvas></div>
+                    <div><h4 style="text-align:center; color:var(--slate);">📉 תרשים בקרה (SPC) - סבב 1</h4><div class="sim-chart-box"><canvas id="simControl1"></canvas></div></div>
+                    <div><h4 style="text-align:center; color:var(--slate);">📈 תרשים פארטו - סבב 1</h4><div class="sim-chart-box"><canvas id="simPareto1"></canvas></div></div>
+                </div>
+                <div class="sim-fg" style="margin-top:20px;">
+                    <label>שאלה: אילו שתי תקלות מוקמו בראש גרף הפארטו ומהוות את עיקר הבעיות בעיר שלכם?</label>
+                    <textarea id="simParetoAnalysis" rows="3" placeholder="הקלידו כאן את ניתוח הפארטו שלכם..."></textarea>
+                </div>
+            </div>
+
+            <!-- מקטע 3: תכנון + סיבוב 2 -->
+            <div class="sim-card">
+                <h3>🛠️ מקטע 3: שלב התכנון והרצת סיבוב 2 (Plan &amp; Do)</h3>
+                <div class="sim-budget-badge">💰 תקציב פנוי: <span id="sim-budget-ui">100</span> נקודות</div>
+                <div id="sim-investments-list"></div>
+                <div class="sim-fg" style="margin-top:12px;">
+                    <label>השקעות שבוצעו בפועל (עבור ה-PDF):</label>
+                    <input type="text" id="simInvestPlain" readonly placeholder="יתעדכן אוטומטית לפי הסימונים למעלה">
+                </div>
+                <button class="btn" style="background:var(--blue-info); color:white; width:100%; margin-top:12px;" onclick="simRun(2)">🚀 הרץ סימולציה משופרת - סיבוב 2</button>
+                <div class="sim-stats-row">
+                    <div>זמן ממוצע חדש: <span class="sim-stat-val" id="simAvg2">-</span></div>
+                    <div>חריגות חדשות: <span class="sim-stat-val" id="simOut2" style="color:var(--red-danger)">-</span></div>
+                    <div>תקלות שנבלמו: <span class="sim-stat-val" id="simMitigated" style="color:var(--green-success)">-</span></div>
+                </div>
+                <div class="sim-charts-container">
+                    <div><h4 style="text-align:center; color:var(--slate);">📉 תרשים בקרה (SPC) - סבב 2</h4><div class="sim-chart-box"><canvas id="simControl2"></canvas></div></div>
+                    <div class="sim-fg">
+                        <label>מסקנות ניהוליות והסבר אסטרטגי (Act):</label>
+                        <textarea id="simConclusions" rows="9" placeholder="הסבירו כיצד השפיעו השקעות המנע על יציבות התהליך וצמצום השונות..."></textarea>
                     </div>
                 </div>
+                <button class="btn btn-success" style="width:100%; margin-top:20px; font-size:1.1rem;" onclick="simExportPDF()">💾 שמור והורד דף עבודה כ-PDF</button>
+                <button class="btn" style="background:var(--purple-holder); color:white; width:100%; margin-top:12px; font-size:1.1rem;" onclick="simSendToFacilitator()">📤 שלח תשובות למנחה (למצגת)</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ==================== 🖥️ מצגת תוצאות ==================== -->
+    <div id="presentation_panel" class="view-panel">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+            <div>
+                <h2 style="border:none; margin:0; color:var(--dark-blue);">🖥️ מצגת תוצאות — דפי עבודה</h2>
+                <p style="color:#555; margin-top:6px;">תשובות הצוותים מופיעות כאן אוטומטית ברגע שהם שולחים. רענון בזמן אמת.</p>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <span id="presCount" style="background:#7c3aed; color:white; padding:8px 16px; border-radius:20px; font-weight:bold;">0 צוותים</span>
+                <button class="btn btn-danger" onclick="presClear()">🧹 נקה הכל</button>
+            </div>
+        </div>
+        <div id="presContent">
+            <div style="text-align:center; padding:60px 20px; color:#888;">
+                <div style="font-size:3rem;">📭</div>
+                <p style="font-size:1.1rem; margin-top:10px;">עדיין לא התקבלו דפי עבודה. הם יופיעו כאן ברגע שצוותים ישלחו.</p>
             </div>
         </div>
     </div>
@@ -2037,6 +2115,47 @@
             setOfflineModeIndicator();
         }
     }
+
+    // ===== גשר לדף העבודה: שליחה והאזנה ל-Firebase (collection נפרד) =====
+    // נקרא מהסקריפט החיצוני של הסימולטור דרך window
+    window.qcSubmitWorksheet = async function(data) {
+        if (!currentUser || !db) {
+            return { ok: false, reason: 'offline' };
+        }
+        try {
+            const id = (data.teamName || 'team').replace(/[^a-zA-Z0-9\u0590-\u05FF]/g, '_') + '_' + Date.now();
+            const ref = doc(db, 'artifacts', appId, 'public', 'data', 'worksheets', id);
+            await setDoc(ref, { ...data, submittedAt: Date.now() });
+            console.log('📤 Worksheet submitted:', id);
+            return { ok: true };
+        } catch (err) {
+            console.error('Worksheet submit failed:', err.code, err.message);
+            return { ok: false, reason: err.code || 'error' };
+        }
+    };
+
+    window.qcListenWorksheets = function(callback) {
+        if (!currentUser || !db) { return false; }
+        const q = collection(db, 'artifacts', appId, 'public', 'data', 'worksheets');
+        onSnapshot(q, (snap) => {
+            const items = [];
+            snap.forEach(d => items.push(d.data()));
+            items.sort((a, b) => (a.submittedAt || 0) - (b.submittedAt || 0));
+            callback(items);
+        }, (err) => console.error('Worksheet listener error:', err.code, err.message));
+        return true;
+    };
+
+    window.qcClearWorksheets = async function() {
+        if (!currentUser || !db) return;
+        try {
+            const snap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'worksheets'));
+            for (const d of snap.docs) {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'worksheets', d.id));
+            }
+            console.log('🧹 Worksheets cleared');
+        } catch (err) { console.error('Clear worksheets failed:', err); }
+    };
 
     // 📊 הגדרות המדדים, בעלי העניין והאייקונים התואמים
     const allPossibleProfiles = {
@@ -3528,33 +3647,30 @@ window.toggleFaqItem = function(element) {
     loadFirebaseAndInit();
 </script>
 
-<!-- ===== סקריפט הסימולטור (עצמאי, נפרד ממנוע המשחק) ===== -->
+<!-- ===== סקריפט הסימולטור + דף עבודה (עצמאי, נפרד ממנוע המשחק) ===== -->
 <script>
     (function() {
-        const simInvestmentOptions = [
-            { id: 'gps',      name: 'מערכת ניווט AI עוקפת פקקים',        cost: 40, risk: 'פקק תנועה',           reduction: 12 },
-            { id: 'comms',    name: 'גיבוי שרתי ענן ואפליקציה',          cost: 30, risk: 'תקלת קשר/אפליקציה',   reduction: 10 },
-            { id: 'training', name: 'הדרכת שירות והתמצאות נהגים',        cost: 25, risk: 'איחור נהג',           reduction: 8 },
-            { id: 'insure',   name: 'מנגנון פיצוי לנוסע ומעקב הגעה',     cost: 20, risk: 'נוסע לא הופיע',        reduction: 6 },
-            { id: 'weather',  name: 'ציוד חורף וצמיגי אחיזה מתקדמים',    cost: 15, risk: 'מזג אוויר חריג',      reduction: 10 }
+        const simOpts = [
+            { id:'gps',      name:'מערכת ניווט AI עוקפת פקקים',     cost:40, risk:'פקק תנועה',         reduction:12 },
+            { id:'comms',    name:'גיבוי שרתי ענן ואפליקציה',       cost:30, risk:'תקלת קשר/אפליקציה', reduction:10 },
+            { id:'training', name:'הדרכת שירות והתמצאות נהגים',     cost:25, risk:'איחור נהג',         reduction:8  },
+            { id:'insure',   name:'מנגנון פיצוי לנוסע ומעקב הגעה',  cost:20, risk:'נוסע לא הופיע',      reduction:6  },
+            { id:'weather',  name:'ציוד חורף וצמיגי אחיזה מתקדמים', cost:15, risk:'מזג אוויר חריג',    reduction:10 }
         ];
 
         let simBudget = 100;
         const simSelected = new Set();
-        let simControlChart = null;
-        let simParetoChart = null;
+        let simCharts = {};
+        let simResults = { avg1:0, out1:0, avg2:0, out2:0, mitigated:0 };
 
         function simInit() {
             const c = document.getElementById('sim-investments-list');
             if (!c) return;
             c.innerHTML = '';
-            simInvestmentOptions.forEach(opt => {
+            simOpts.forEach(opt => {
                 c.innerHTML += `
                     <div class="sim-investment-option">
-                        <div>
-                            <strong>${opt.name}</strong><br>
-                            <small style="color:#64748b">מפחית סיכון: ${opt.risk} | עלות: ${opt.cost} נק'</small>
-                        </div>
+                        <div><strong>${opt.name}</strong><br><small style="color:#64748b">מנטרל: ${opt.risk} | עלות: ${opt.cost} נק'</small></div>
                         <input type="checkbox" id="sim-chk-${opt.id}" onchange="simToggle('${opt.id}', ${opt.cost})">
                     </div>`;
             });
@@ -3564,83 +3680,213 @@ window.toggleFaqItem = function(element) {
             const cb = document.getElementById('sim-chk-' + id);
             if (cb.checked) {
                 if (simBudget - cost >= 0) { simBudget -= cost; simSelected.add(id); }
-                else { cb.checked = false; alert('אין מספיק נקודות תקציב להשקעה זו!'); }
+                else { cb.checked = false; alert('אין מספיק נקודות תקציב!'); }
             } else { simBudget += cost; simSelected.delete(id); }
             document.getElementById('sim-budget-ui').innerText = simBudget;
+            let txt = [];
+            simSelected.forEach(iId => txt.push(simOpts.find(o => o.id === iId).name));
+            document.getElementById('simInvestPlain').value = txt.join(', ') || 'ללא השקעות מנע';
         };
 
-        window.simRunSimulation = function() {
+        window.simRun = function(round) {
             if (typeof Chart === 'undefined') { alert('ספריית הגרפים עדיין נטענת — נסו שוב בעוד רגע.'); return; }
-            const sampleSize = 30;
             let labels = [], waits = [];
             let incidents = { 'פקק תנועה':0, 'תקלת קשר/אפליקציה':0, 'איחור נהג':0, 'נוסע לא הופיע':0, 'מזג אוויר חריג':0 };
             let mitigated = 0, t = 0;
 
-            for (let i = 1; i <= sampleSize; i++) {
-                t += Math.floor(Math.random()*4)+1;
-                labels.push('דקה ' + t);
-                let wait = Math.random()*8 + 4;
-                if (Math.random() < 0.40) {
+            for (let i = 1; i <= 30; i++) {
+                t += Math.floor(Math.random()*3)+1;
+                labels.push("דק' " + t);
+                let wait = Math.random()*7 + 5;
+                if (Math.random() < 0.45) {
                     const risks = Object.keys(incidents);
                     const r = risks[Math.floor(Math.random()*risks.length)];
                     incidents[r]++;
-                    const match = simInvestmentOptions.find(o => o.risk === r);
-                    if (match && simSelected.has(match.id)) {
-                        wait += Math.max(1, (Math.random()*15+5) - match.reduction);
+                    const match = simOpts.find(o => o.risk === r);
+                    if (round === 2 && match && simSelected.has(match.id)) {
+                        wait += Math.max(1, (Math.random()*12+4) - match.reduction);
                         mitigated++;
                     } else {
-                        wait += (Math.random()*20+10);
+                        wait += (Math.random()*22+10);
                     }
                 }
                 waits.push(parseFloat(wait.toFixed(2)));
             }
 
             const avg = waits.reduce((a,b)=>a+b,0)/waits.length;
-            const sd = Math.sqrt(waits.map(v=>Math.pow(v-avg,2)).reduce((a,b)=>a+b,0)/waits.length);
-            const ucl = avg + 2*sd, lcl = Math.max(0, avg - 2*sd);
+            const ucl = avg + 10, lcl = Math.max(0, avg - 10);
             const outliers = waits.filter(v => v>ucl || v<lcl).length;
 
-            document.getElementById('sim-stat-avg').innerText = avg.toFixed(2) + " דק'";
-            document.getElementById('sim-stat-outliers').innerText = outliers;
-            document.getElementById('sim-stat-mitigated').innerText = mitigated;
+            document.getElementById('simAvg'+round).innerText = avg.toFixed(2) + " דק'";
+            document.getElementById('simOut'+round).innerText = outliers;
 
-            // תרשים בקרה
-            if (simControlChart) simControlChart.destroy();
-            simControlChart = new Chart(document.getElementById('simControlChart').getContext('2d'), {
-                type: 'line',
-                data: { labels, datasets: [
-                    { label: 'זמן המתנה בפועל', data: waits, borderColor: '#2563eb', tension: 0.1, fill: false },
-                    { label: 'ממוצע (CL)', data: Array(labels.length).fill(avg), borderColor: '#16a34a', borderDash:[5,5], pointRadius:0 },
-                    { label: 'גבול עליון (UCL)', data: Array(labels.length).fill(ucl), borderColor: '#dc2626', borderDash:[2,2], pointRadius:0 },
-                    { label: 'גבול תחתון (LCL)', data: Array(labels.length).fill(lcl), borderColor: '#ca8a04', borderDash:[2,2], pointRadius:0 }
-                ]},
-                options: { responsive:true, maintainAspectRatio:false }
-            });
-
-            // תרשים פארטו
-            if (simParetoChart) simParetoChart.destroy();
-            const sorted = Object.entries(incidents).sort((a,b)=>b[1]-a[1]);
-            const plabels = sorted.map(x=>x[0]); const counts = sorted.map(x=>x[1]);
-            const total = counts.reduce((a,b)=>a+b,0)||1; let cum=0;
-            const cumPct = counts.map(c=>{ cum+=c; return ((cum/total)*100).toFixed(1); });
-            simParetoChart = new Chart(document.getElementById('simParetoChart').getContext('2d'), {
-                data: { labels: plabels, datasets: [
-                    { type:'bar', label:'שכיחות תקלה', data:counts, backgroundColor:'#3b82f6', yAxisID:'y' },
-                    { type:'line', label:'אחוז מצטבר', data:cumPct, borderColor:'#dc2626', backgroundColor:'#dc2626', yAxisID:'y2', tension:0.1 }
-                ]},
-                options: { responsive:true, maintainAspectRatio:false, scales: {
-                    y: { type:'linear', position:'left', title:{display:true, text:'מספר מופעים'} },
-                    y2: { type:'linear', position:'right', min:0, max:100, title:{display:true, text:'אחוז מצטבר (%)'}, grid:{drawOnChartArea:false} }
-                }}
-            });
+            if (round === 1) {
+                simResults.avg1 = avg.toFixed(2); simResults.out1 = outliers;
+                simControlChart('simControl1', labels, waits, avg, ucl, lcl);
+                simParetoChart('simPareto1', incidents);
+            } else {
+                simResults.avg2 = avg.toFixed(2); simResults.out2 = outliers; simResults.mitigated = mitigated;
+                document.getElementById('simMitigated').innerText = mitigated;
+                simControlChart('simControl2', labels, waits, avg, ucl, lcl);
+            }
         };
 
-        // אתחול הסימולטור (פעם אחת)
+        function simControlChart(id, labels, data, avg, ucl, lcl) {
+            if (simCharts[id]) simCharts[id].destroy();
+            simCharts[id] = new Chart(document.getElementById(id).getContext('2d'), {
+                type: 'line',
+                data: { labels, datasets: [
+                    { label:'זמן המתנה', data, borderColor:'#2563eb', fill:false },
+                    { label:'ממוצע', data:Array(labels.length).fill(avg), borderColor:'#16a34a', borderDash:[5,5], pointRadius:0 },
+                    { label:'UCL', data:Array(labels.length).fill(ucl), borderColor:'#dc2626', borderDash:[2,2], pointRadius:0 },
+                    { label:'LCL', data:Array(labels.length).fill(lcl), borderColor:'#ca8a04', borderDash:[2,2], pointRadius:0 }
+                ]},
+                options: { responsive:true, maintainAspectRatio:false, animation:false }
+            });
+        }
+
+        function simParetoChart(id, incidents) {
+            if (simCharts[id]) simCharts[id].destroy();
+            const sorted = Object.entries(incidents).sort((a,b)=>b[1]-a[1]);
+            const labels = sorted.map(x=>x[0]), counts = sorted.map(x=>x[1]);
+            const total = counts.reduce((a,b)=>a+b,0)||1; let sum=0;
+            const cum = counts.map(c=>{ sum+=c; return ((sum/total)*100).toFixed(1); });
+            simCharts[id] = new Chart(document.getElementById(id).getContext('2d'), {
+                data: { labels, datasets: [
+                    { type:'bar', label:'כמות', data:counts, backgroundColor:'#3b82f6', yAxisID:'y' },
+                    { type:'line', label:'אחוז מצטבר', data:cum, borderColor:'#dc2626', yAxisID:'y2', tension:0.1 }
+                ]},
+                options: { responsive:true, maintainAspectRatio:false, animation:false, scales: {
+                    y:{ type:'linear', position:'left' }, y2:{ type:'linear', position:'right', min:0, max:100 }
+                }}
+            });
+        }
+
+        window.simExportPDF = function() {
+            const teamName = document.getElementById('simTeamName').value.trim();
+            if (!teamName || simResults.avg1 === 0 || simResults.avg2 === 0) {
+                alert('אנא ודאו שרשמתם את שם הצוות והרצתם את שני סיבובי הסימולציה לפני השמירה!');
+                return;
+            }
+            document.body.classList.add('sim-printing');
+            const originalTitle = document.title;
+            document.title = 'דף_עבודה_QuickCab_' + teamName.replace(/\s+/g, '_');
+            window.print();
+            document.title = originalTitle;
+            setTimeout(() => document.body.classList.remove('sim-printing'), 500);
+        };
+
+        // 📤 שליחת דף העבודה למנחה (כולל גרפים כתמונות)
+        window.simSendToFacilitator = async function() {
+            const teamName = document.getElementById('simTeamName').value.trim();
+            if (!teamName || simResults.avg1 === 0 || simResults.avg2 === 0) {
+                alert('אנא ודאו שרשמתם את שם הצוות והרצתם את שני סיבובי הסימולציה לפני השליחה!');
+                return;
+            }
+            if (typeof window.qcSubmitWorksheet !== 'function') {
+                alert('פונקציית השליחה אינה זמינה — נסו לרענן את הדף.');
+                return;
+            }
+
+            // המרת הגרפים לתמונות PNG
+            function chartImg(id) {
+                const c = document.getElementById(id);
+                try { return c ? c.toDataURL('image/png', 0.7) : ''; } catch(e) { return ''; }
+            }
+
+            const data = {
+                teamName: teamName,
+                cityName: document.getElementById('simCityName').value.trim(),
+                paretoAnalysis: document.getElementById('simParetoAnalysis').value.trim(),
+                conclusions: document.getElementById('simConclusions').value.trim(),
+                investments: document.getElementById('simInvestPlain').value,
+                avg1: simResults.avg1, out1: simResults.out1,
+                avg2: simResults.avg2, out2: simResults.out2,
+                mitigated: simResults.mitigated,
+                imgControl1: chartImg('simControl1'),
+                imgPareto1: chartImg('simPareto1'),
+                imgControl2: chartImg('simControl2')
+            };
+
+            const res = await window.qcSubmitWorksheet(data);
+            if (res.ok) {
+                alert('✅ דף העבודה נשלח בהצלחה למנחה!');
+            } else if (res.reason === 'offline') {
+                alert('⚠️ אין חיבור לענן הכיתתי. השליחה למצגת זמינה רק כשהמערכת מחוברת (מ-GitHub Pages).');
+            } else {
+                alert('❌ השליחה נכשלה: ' + res.reason);
+            }
+        };
+
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', simInit);
-        } else {
-            simInit();
+        } else { simInit(); }
+
+        // ===== מצגת התוצאות =====
+        function presRender(items) {
+            const box = document.getElementById('presContent');
+            const countEl = document.getElementById('presCount');
+            if (!box) return;
+            countEl.innerText = items.length + ' צוותים';
+
+            if (!items.length) {
+                box.innerHTML = `<div style="text-align:center; padding:60px 20px; color:#888;">
+                    <div style="font-size:3rem;">📭</div>
+                    <p style="font-size:1.1rem; margin-top:10px;">עדיין לא התקבלו דפי עבודה. הם יופיעו כאן ברגע שצוותים ישלחו.</p></div>`;
+                return;
+            }
+
+            box.innerHTML = items.map(d => {
+                const img = (src, alt) => src ? `<img src="${src}" alt="${alt}" style="width:100%; border:1px solid #e2e8f0; border-radius:8px;">` : '<div style="color:#aaa; padding:20px; text-align:center;">אין גרף</div>';
+                return `
+                <div class="sim-card" style="margin-bottom:24px; border-top:4px solid #7c3aed;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                        <h3 style="border:none; margin:0;">🚕 ${d.teamName || 'צוות'} ${d.cityName ? '— ' + d.cityName : ''}</h3>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <span style="background:#eef2ff; color:#3730a3; padding:4px 12px; border-radius:14px; font-size:0.85rem;">ממוצע: ${d.avg1} ← ${d.avg2} דק'</span>
+                            <span style="background:#fef2f2; color:#991b1b; padding:4px 12px; border-radius:14px; font-size:0.85rem;">חריגות: ${d.out1} ← ${d.out2}</span>
+                            <span style="background:#f0fdf4; color:#166534; padding:4px 12px; border-radius:14px; font-size:0.85rem;">נבלמו: ${d.mitigated}</span>
+                        </div>
+                    </div>
+                    <p style="margin:10px 0; font-size:0.92rem;"><strong>השקעות מנע:</strong> ${d.investments || '—'}</p>
+                    <div class="sim-grid2" style="margin-top:12px;">
+                        <div>
+                            <p style="font-weight:bold; color:var(--slate); font-size:0.9rem;">📉 בקרה סבב 1</p>
+                            ${img(d.imgControl1, 'control1')}
+                            <p style="font-weight:bold; color:var(--slate); font-size:0.9rem; margin-top:10px;">📈 פארטו סבב 1</p>
+                            ${img(d.imgPareto1, 'pareto1')}
+                        </div>
+                        <div>
+                            <p style="font-weight:bold; color:var(--slate); font-size:0.9rem;">📉 בקרה סבב 2 (אחרי שיפור)</p>
+                            ${img(d.imgControl2, 'control2')}
+                        </div>
+                    </div>
+                    <div style="margin-top:14px; background:#f8fafc; border-radius:8px; padding:12px;">
+                        <p style="font-size:0.9rem;"><strong>🔍 ניתוח פארטו:</strong> ${d.paretoAnalysis || '—'}</p>
+                        <p style="font-size:0.9rem; margin-top:8px;"><strong>🎯 מסקנות ניהוליות:</strong> ${d.conclusions || '—'}</p>
+                    </div>
+                </div>`;
+            }).join('');
         }
+
+        window.presClear = async function() {
+            if (!confirm('לנקות את כל דפי העבודה שהתקבלו? פעולה זו בלתי הפיכה.')) return;
+            if (typeof window.qcClearWorksheets === 'function') {
+                await window.qcClearWorksheets();
+                presRender([]);
+            }
+        };
+
+        // הפעלת האזנה למצגת (ממתין שה-Firebase ייטען)
+        function presStartListener(attempt) {
+            attempt = attempt || 0;
+            if (typeof window.qcListenWorksheets === 'function') {
+                const ok = window.qcListenWorksheets(presRender);
+                if (ok) { console.log('🖥️ Presentation listener active'); return; }
+            }
+            if (attempt < 20) setTimeout(() => presStartListener(attempt + 1), 1000);
+        }
+        presStartListener();
     })();
 </script>
 
