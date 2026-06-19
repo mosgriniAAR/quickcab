@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QuickCab - סימולציית ניהול איכות ומטה מרכזית</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         :root {
             --taxi-yellow: #f1c40f;
@@ -688,7 +689,46 @@
         .guidelines-faq-item.open .guidelines-faq-answer {
             display: block;
         }
+        /* ===== Dropdown Menu ===== */
 
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            min-width: 250px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            z-index: 9999;
+        }
+
+            .dropdown-content a {
+                display: block;
+                padding: 14px 18px;
+                text-decoration: none;
+                cursor: pointer;
+                color: #2c3e50;
+                border-bottom: 1px solid #eee;
+            }
+
+                .dropdown-content a:last-child {
+                    border-bottom: none;
+                }
+
+                .dropdown-content a:hover {
+                    background: #f5f7fa;
+                }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -719,12 +759,48 @@
 
     <!-- שתי עמדות ראשיות בלבד. פאנל מנהל מוגן וקצר בשורה אחת -->
     <div class="navigation-tabs">
-        <button class="btn btn-success" onclick="switchActiveTab('welcome')">🏠 ראשי</button>
-        <button class="btn btn-primary" onclick="switchActiveTab('team_station')">👥 עמדת עבודה צוותית</button>
-        <button class="btn btn-info" onclick="switchActiveTab('guidelines')">📚 הנחיות המשחק</button>
-        <button class="btn" style="background:#0ea5e9; color:white;" onclick="switchActiveTab('simulator')">🔬 סימולטור בקרת איכות</button>
-        <button class="btn" style="background:#7c3aed; color:white;" onclick="switchActiveTab('presentation')">🖥️ מצגת תוצאות</button>
-        <button class="btn btn-danger" onclick="switchActiveTab('admin_control')">🔐 פאנל מנהל</button>
+
+        <button class="btn btn-success"
+                onclick="switchActiveTab('welcome')">
+            🏠 ראשי
+        </button>
+
+        <div class="dropdown">
+            <button class="btn btn-primary">
+                🎓 סביבת למידה ▼
+            </button>
+
+            <div class="dropdown-content">
+                <a onclick="switchActiveTab('team_station')">
+                    👥 עמדת עבודה צוותית
+                </a>
+
+                <a onclick="switchActiveTab('guidelines')">
+                    📚 הנחיות המשחק
+                </a>
+
+                <a onclick="switchActiveTab('simulator')">
+                    🔬 סימולטור בקרת איכות
+                </a>
+            </div>
+        </div>
+
+        <div class="dropdown">
+            <button class="btn btn-danger">
+                🔒 מרצה ▼
+            </button>
+
+            <div class="dropdown-content">
+                <a onclick="switchActiveTab('presentation')">
+                    🖥️ מצגת תוצאות
+                </a>
+
+                <a onclick="switchActiveTab('admin_control')">
+                    🔐 פאנל מנהל
+                </a>
+            </div>
+        </div>
+
     </div>
 
     <!-- ==================== 🏠 מסך פתיחה ==================== -->
@@ -1990,6 +2066,21 @@
                     <h3>🧹 איפוס מערכת קשיח (Hard Reset)</h3>
                     <p style="font-size: 0.9rem; color: #666; margin: 10px 0 15px 0;">פעולה זו מוחקת את כל נתוני המשחק, ההיסטוריה וההחלטות של כל הצוותים הן מהענן והן מהמכשיר הנוכחי, ומחזירה את המערכת למצבה ההתחלתי.</p>
                     <button class="btn btn-danger" style="width: 100%;" onclick="executeHardResetEverything()">🧹 איפוס קשיח מיידי</button>
+                <!-- כפתור איפוס מצגת -->
+                    <button class="btn" onclick="resetPresentationFromAdmin()" style="
+                     width: 100%;
+                     background: linear-gradient(135deg, #a855f7, #7c3aed);
+                     color: white;
+                     border: none;
+                     padding: 12px;
+                     border-radius: 8px;
+                     cursor: pointer;
+                     font-weight: bold;
+                     font-size: 1rem;
+                     margin-top: 10px;
+                     ">
+                     🎬 איפוס מצגת תוצאות
+                    </button>
                 </div>
 
                 <!-- כרטיס הזרקת נתוני דמו -->
@@ -3645,6 +3736,16 @@ window.toggleFaqItem = function(element) {
 
     // טעינת Firebase ברקע (לא חוסם את ממשק המשתמש)
     loadFirebaseAndInit();
+
+    function resetPresentationFromAdmin() {
+        if (!confirm('⚠️ האם לאפס את מצגת התוצאות?\nכל דפי העבודה שהתקבלו יימחקו.')) return;
+        presClear();
+        showSystemNotification('✅ המצגת אופסה', 'כל דפי העבודה נמחקו בהצלחה');
+    }
+
+    window.resetPresentationFromAdmin = resetPresentationFromAdmin;
+
+
 </script>
 
 <!-- ===== סקריפט הסימולטור + דף עבודה (עצמאי, נפרד ממנוע המשחק) ===== -->
