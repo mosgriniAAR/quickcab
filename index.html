@@ -780,6 +780,94 @@
         .wiz-do li, .wiz-dont li { padding:6px 0; font-size:1.05rem; color:var(--slate); }
 
         .wiz-nav { display:flex; justify-content:space-between; align-items:center; margin-top:30px; }
+
+        /* ===== מסך בריפינג ===== */
+        #briefingBlock { display: block; }
+        .briefing-section {
+            background: white; border-radius: 14px;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.07);
+            padding: 24px 28px; margin-bottom: 20px;
+        }
+        .briefing-section h3 {
+            color: var(--dark-blue); font-size: 1.1rem;
+            margin-bottom: 16px; padding-bottom: 10px;
+            border-bottom: 2px solid var(--taxi-yellow);
+        }
+        .briefing-kpi-grid {
+            display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 18px;
+        }
+        @media(max-width:700px){ .briefing-kpi-grid { grid-template-columns: 1fr 1fr; } }
+        .kpi-stat {
+            background: #f8f9fa; border-radius: 10px;
+            padding: 14px 16px; border-right: 4px solid var(--taxi-yellow);
+        }
+        .kpi-stat .kpi-val { font-size: 1.6rem; font-weight: 800; color: var(--red-danger); }
+        .kpi-stat .kpi-lbl { font-size: 0.8rem; color: #666; margin-top: 2px; }
+        .briefing-budget-row {
+            display: grid; grid-template-columns: repeat(5,1fr); gap: 10px; margin-top: 8px;
+        }
+        @media(max-width:750px){ .briefing-budget-row { grid-template-columns: 1fr 1fr; } }
+        .budget-card {
+            background: #f0f6ff; border: 1px solid #bcd5f5;
+            border-radius: 10px; padding: 12px 10px; text-align: center;
+        }
+        .budget-card .bc-icon { font-size: 1.5rem; }
+        .budget-card .bc-name { font-size: 0.75rem; font-weight: 700; color: var(--dark-blue); margin: 4px 0; }
+        .budget-counter {
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .budget-counter button {
+            width: 26px; height: 26px; border-radius: 50%;
+            border: 1px solid #aaa; background: white;
+            font-size: 1rem; cursor: pointer; line-height: 1;
+        }
+        .budget-counter input {
+            width: 46px; height: 26px; text-align: center;
+            border: 1px solid #ccc; border-radius: 6px;
+            font-size: 0.9rem; font-weight: 700;
+        }
+        .briefing-budget-total {
+            margin-top: 14px; text-align: center; font-weight: 700; font-size: 1rem;
+        }
+        .briefing-budget-total span { font-size: 1.3rem; }
+        #briefingSubmitBtn { width: 100%; font-size: 1.1rem; padding: 14px; margin-top: 20px; }
+        .briefing-submitted-msg {
+            text-align: center; padding: 24px; color: var(--green-success); font-size: 1.2rem; font-weight: 700;
+        }
+        .voc-box {
+            background: #fffbeb; border-right: 4px solid var(--orange-warn);
+            border-radius: 8px; padding: 12px 14px; margin-bottom: 10px;
+            font-size: 0.9rem; color: #555; font-style: italic;
+        }
+
+        /* ===== כפתורי פעולה ראשית — בולטים וברורים ===== */
+        .btn-action {
+            position: relative;
+            border-radius: 10px !important;
+            font-size: 1.05rem !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.3px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.18), 0 2px 4px rgba(0,0,0,0.12) !important;
+            transition: transform 0.12s, box-shadow 0.12s, filter 0.12s !important;
+            cursor: pointer !important;
+        }
+        .btn-action:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 7px 20px rgba(0,0,0,0.22), 0 3px 6px rgba(0,0,0,0.14) !important;
+            filter: brightness(1.07);
+        }
+        .btn-action:active {
+            transform: translateY(0px) !important;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
+        }
+        .btn-action-hint {
+            display: block;
+            text-align: center;
+            font-size: 0.78rem;
+            color: #888;
+            margin-bottom: 6px;
+            letter-spacing: 0.2px;
+        }
     </style>
 </head>
 <body>
@@ -808,7 +896,7 @@
         <h1 onclick="switchActiveTab('welcome')" style="cursor:pointer;" title="חזרה למסך הבית">🚖 חברת המוניות QuickCab</h1>
     </header>
 
-    <!-- מצב דמו עצמאי: רק סביבת הלמידה, ללא כניסת מרצה/פאנל מנהל -->
+    <!-- שני כפתורים: סביבת למידה (סטודנט) + כניסת מרצה (מוגן) -->
     <div class="navigation-tabs">
 
         <div class="dropdown">
@@ -827,17 +915,29 @@
             </div>
         </div>
 
-    </div>
+        <div class="dropdown" id="teacherMenuContainer">
 
-    <!-- 🧭 פס מנחה וירטואלי — מלווה את המשתתף לאורך כל השלבים (מצב דמו) -->
-    <div id="demoGuideBanner" style="display:none; background:linear-gradient(135deg, #eef2ff, #e0e7ff); border:2px solid #818cf8; border-radius:14px; padding:16px 22px; margin-bottom:20px; box-shadow:var(--shadow);">
-        <div style="display:flex; align-items:flex-start; gap:14px;">
-            <div style="font-size:1.8rem; line-height:1;">🧭</div>
-            <div style="flex:1;">
-                <div id="demoGuideTitle" style="font-weight:800; color:#3730a3; font-size:1.05rem; margin-bottom:3px;">שלב נוכחי</div>
-                <div id="demoGuideText" style="color:#4338ca; font-size:0.95rem; line-height:1.5;">הנחיה תופיע כאן.</div>
+            <button class="btn btn-danger"
+                    onclick="unlockTeacherMenu()">
+                🔑 כניסת מרצה
+            </button>
+
+            <div class="dropdown-content"
+                 id="teacherMenu"
+                 style="display:none;">
+
+                <a onclick="switchActiveTab('presentation')">
+                    🖥️ מצגת תוצאות
+                </a>
+
+                <a onclick="switchActiveTab('admin_control')">
+                    🔐 פאנל מנהל
+                </a>
+
             </div>
+
         </div>
+
     </div>
 
     <!-- ==================== 🏠 מסך פתיחה ==================== -->
@@ -920,31 +1020,211 @@
             </div>
         </div>
 
-        <div id="teamSetupBlock">
-            <h2>👥 שלב א': בחירת קבוצת עניין והגדרת זהות</h2>
-            <p style="color: #666; margin-bottom: 20px;">בחרו את קבוצת העניין שלכם מתוך הרשימה הבאה כדי להתחיל בגיבוש האסטרטגיה:</p>
+        <!-- ========== מסך בריפינג: היכרות עם QuickCab ========== -->
+        <div id="briefingBlock">
+
+            <!-- כותרת -->
+            <div style="background:linear-gradient(135deg,#1a252f,#2c3e50); border-radius:14px; padding:22px 28px; margin-bottom:20px; color:white; text-align:center;">
+                <div style="font-size:2.2rem; margin-bottom:6px;">🚖</div>
+                <h2 style="color:#f1c40f; margin:0 0 6px 0; font-size:1.5rem;">בריפינג דחוף — חברת QuickCab</h2>
+                <p style="margin:0; color:#cbd5e1; font-size:0.95rem;">לפני שנבחר תפקיד — קראו את המצב, נתחו, והגישו את תוכנית ההבראה שלכם.</p>
+            </div>
+
+            <!-- מדדי KPI -->
+            <div class="briefing-section">
+                <h3>📊 מדדי ביצוע מרכזיים — רבעון אחרון</h3>
+                <div class="briefing-kpi-grid">
+                    <div class="kpi-stat"><div class="kpi-val">22 דק'</div><div class="kpi-lbl">זמן המתנה ממוצע (+40% משנה שעברה)</div></div>
+                    <div class="kpi-stat"><div class="kpi-val">18%</div><div class="kpi-lbl">ביטולי נסיעות מצד הלקוח</div></div>
+                    <div class="kpi-stat"><div class="kpi-val">2.4 / 5</div><div class="kpi-lbl">מדד שביעות רצון (CSAT)</div></div>
+                    <div class="kpi-stat"><div class="kpi-val">35</div><div class="kpi-lbl">תלונות לכל 100 נסיעות</div></div>
+                    <div class="kpi-stat"><div class="kpi-val">65%</div><div class="kpi-lbl">זמינות הצי (מוניות תקינות)</div></div>
+                    <div class="kpi-stat" style="border-color:#e74c3c; background:#fff5f5;"><div class="kpi-val" style="color:#c0392b;">⚠️ קריסה</div><div class="kpi-lbl">ירידה חדה ברווחיות ונטישת שוק</div></div>
+                </div>
+
+                <!-- קול הלקוח -->
+                <h3 style="margin-top:4px;">🗣️ קול הלקוח (VOC)</h3>
+                <div class="voc-box">"הזמנתי מונית לטיסה, הנהג לא הגיע והסדרן פשוט לא ענה לטלפון. כמעט פספסתי את הטיסה!"</div>
+                <div class="voc-box">"האפליקציה קורסת בכל פעם שיש קצת גשם ועומס תנועה, והמחירים קופצים בצורה לא הגיונית."</div>
+                <div class="voc-box">"המוניות ישנות, מלוכלכות, ולפעמים הנהג בכלל לא יודע להשתמש ב-Waze ומסתבך בדרך."</div>
+            </div>
+
+            <!-- כשלים מערכתיים -->
+            <div class="briefing-section">
+                <h3>🔍 כשלים מערכתיים שזוהו</h3>
+                <ul style="color:#555; font-size:0.92rem; line-height:1.9; padding-right:18px;">
+                    <li><strong>תרבות Workarounds:</strong> עובדים פותרים בעיות נקודתיות במקום שהנהלה תטפל בשורש.</li>
+                    <li><strong>תרבות האשמה:</strong> אחרי אירוע בטיחות מחפשים נהג אשם — לא כשל מערכת. זה מוביל להסתרת טעויות.</li>
+                    <li><strong>דיווח כוזב:</strong> נהגים מדווחים "5 דקות מהיעד" בעוד הם בעיר אחרת. כל תכנון הופך בלתי אפשרי.</li>
+                    <li><strong>פערי כשירות טכנולוגית:</strong> נהגים אינם שולטים במערכות ניווט ובקרה — הטכנולוגיה הופכת לגורם עיכוב.</li>
+                    <li><strong>כשל ניהול קיבולת:</strong> נהגים בוחרים נסיעות לפי העדפה אישית, לא לפי צורך המערכת.</li>
+                    <li><strong>תקשורת "רועשת":</strong> ממשק צעקות בין סדרנים לנהגים — מידע קריטי על לקוחות הולך לאיבוד.</li>
+                </ul>
+            </div>
+
+            <!-- שאלה 1: ניתוח שורש -->
+            <div class="briefing-section">
+                <h3>📋 שאלה 1 — ניתוח סיבות שורש</h3>
+                <p style="color:#666; font-size:0.9rem; margin-bottom:12px;">
+                    על פי דמינג, ארגון הוא מערכת של מרכיבים אנושיים ותהליכים הפועלים יחד. בצעו ניתוח סיבות שורש לכשלי החברה והגדירו מה לדעתכם הכשל <strong>המרכזי ביותר</strong> שמניע את שאר הכשלים.
+                </p>
+                <textarea id="briefRootCause" rows="4"
+                    placeholder="לדוגמה: הכשל המרכזי הוא תרבות האשמה — היא מונעת למידה ומוביל להסתרת טעויות, שגורמת לכשל נתונים, שמונעת תכנון... [המשיכו את הניתוח]"
+                    style="width:100%; border:1px solid #ddd; border-radius:8px; padding:12px; font-size:0.9rem; resize:vertical;"></textarea>
+            </div>
+
+            <!-- שאלה 2: 3 KPIs -->
+            <div class="briefing-section">
+                <h3>📋 שאלה 2 — 3 מדדי KPI לניהול המהפך</h3>
+                <p style="color:#666; font-size:0.9rem; margin-bottom:12px;">
+                    הגדירו 3 מדדי ביצוע מרכזיים שיהוו את "מד-הדופק" של תוכנית ההבראה. לכל KPI — שם, מטרה מספרית, ולמה בחרתם דווקא בו.
+                </p>
+                <div style="display:flex; flex-direction:column; gap:10px;">
+                    <div style="display:grid; grid-template-columns:2fr 1fr; gap:10px;">
+                        <input id="briefKpi1Name" type="text" placeholder="KPI 1 — שם המדד (לדוגמה: זמן המתנה ממוצע)" style="border:1px solid #ddd; border-radius:8px; padding:10px; font-size:0.9rem;">
+                        <input id="briefKpi1Target" type="text" placeholder="יעד מספרי (לדוגמה: ≤10 דק')" style="border:1px solid #ddd; border-radius:8px; padding:10px; font-size:0.9rem;">
+                    </div>
+                    <div style="display:grid; grid-template-columns:2fr 1fr; gap:10px;">
+                        <input id="briefKpi2Name" type="text" placeholder="KPI 2 — שם המדד" style="border:1px solid #ddd; border-radius:8px; padding:10px; font-size:0.9rem;">
+                        <input id="briefKpi2Target" type="text" placeholder="יעד מספרי" style="border:1px solid #ddd; border-radius:8px; padding:10px; font-size:0.9rem;">
+                    </div>
+                    <div style="display:grid; grid-template-columns:2fr 1fr; gap:10px;">
+                        <input id="briefKpi3Name" type="text" placeholder="KPI 3 — שם המדד" style="border:1px solid #ddd; border-radius:8px; padding:10px; font-size:0.9rem;">
+                        <input id="briefKpi3Target" type="text" placeholder="יעד מספרי" style="border:1px solid #ddd; border-radius:8px; padding:10px; font-size:0.9rem;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- שאלה 3: תוכנית הבראה 100 נקודות -->
+            <div class="briefing-section">
+                <h3>📋 שאלה 3 — תוכנית הבראה (100 נקודות תקציב)</h3>
+                <p style="color:#666; font-size:0.9rem; margin-bottom:16px;">
+                    חלקו 100 נקודות תקציב בין 5 עוגנים. הסבירו בקצרה את ההיגיון מאחורי החלוקה שבחרתם.
+                </p>
+                <div class="briefing-budget-row">
+                    <div class="budget-card">
+                        <div class="bc-icon">🤝</div>
+                        <div class="bc-name">מערכת CRM</div>
+                        <div class="budget-counter">
+                            <button onclick="briefBudgetChange('crm',-5)">−</button>
+                            <input type="number" id="bbudget-crm" value="20" min="0" max="100" oninput="briefBudgetUpdate()">
+                            <button onclick="briefBudgetChange('crm',5)">+</button>
+                        </div>
+                        <div style="font-size:0.7rem;color:#888;margin-top:4px;">חווית לקוח</div>
+                    </div>
+                    <div class="budget-card">
+                        <div class="bc-icon">🚗</div>
+                        <div class="bc-name">הכשרת נהגים</div>
+                        <div class="budget-counter">
+                            <button onclick="briefBudgetChange('drivers',-5)">−</button>
+                            <input type="number" id="bbudget-drivers" value="20" min="0" max="100" oninput="briefBudgetUpdate()">
+                            <button onclick="briefBudgetChange('drivers',5)">+</button>
+                        </div>
+                        <div style="font-size:0.7rem;color:#888;margin-top:4px;">ממשק אנושי</div>
+                    </div>
+                    <div class="budget-card">
+                        <div class="bc-icon">🔒</div>
+                        <div class="bc-name">אבטחת מידע</div>
+                        <div class="budget-counter">
+                            <button onclick="briefBudgetChange('cyber',-5)">−</button>
+                            <input type="number" id="bbudget-cyber" value="20" min="0" max="100" oninput="briefBudgetUpdate()">
+                            <button onclick="briefBudgetChange('cyber',5)">+</button>
+                        </div>
+                        <div style="font-size:0.7rem;color:#888;margin-top:4px;">חוסן סייבר</div>
+                    </div>
+                    <div class="budget-card">
+                        <div class="bc-icon">📋</div>
+                        <div class="bc-name">ISO 9001</div>
+                        <div class="budget-counter">
+                            <button onclick="briefBudgetChange('iso',-5)">−</button>
+                            <input type="number" id="bbudget-iso" value="20" min="0" max="100" oninput="briefBudgetUpdate()">
+                            <button onclick="briefBudgetChange('iso',5)">+</button>
+                        </div>
+                        <div style="font-size:0.7rem;color:#888;margin-top:4px;">בקרה ושיפור</div>
+                    </div>
+                    <div class="budget-card">
+                        <div class="bc-icon">🔧</div>
+                        <div class="bc-name">תחזוקה מונעת</div>
+                        <div class="budget-counter">
+                            <button onclick="briefBudgetChange('maintenance',-5)">−</button>
+                            <input type="number" id="bbudget-maintenance" value="0" min="0" max="100" oninput="briefBudgetUpdate()">
+                            <button onclick="briefBudgetChange('maintenance',5)">+</button>
+                        </div>
+                        <div style="font-size:0.7rem;color:#888;margin-top:4px;">גורמים שכיחים</div>
+                    </div>
+                </div>
+                <div class="briefing-budget-total">
+                    תקציב בשימוש: <span id="briefBudgetTotal" style="color:var(--dark-blue);">80</span> / 100 נק'
+                    <span id="briefBudgetWarn" style="color:var(--red-danger); display:none;"> ⚠️ חרגתם מ-100 נקודות!</span>
+                    <span id="briefBudgetOk" style="color:var(--green-success); display:none;"> ✅ בדיוק 100 נקודות</span>
+                </div>
+                <div class="sim-fg" style="margin-top:16px;">
+                    <label style="font-weight:bold; color:var(--dark-blue);">נמקו את החלוקה שבחרתם:</label>
+                    <textarea id="briefBudgetRationale" rows="3"
+                        placeholder="לדוגמה: הקצנו יותר ל-CRM כי קול הלקוח מראה שאמון הלקוח הוא הנכס הקריטי ביותר לשיקום. בלי לקוחות נאמנים, שאר ההשקעות חסרות ערך..."
+                        style="width:100%; border:1px solid #ddd; border-radius:8px; padding:12px; font-size:0.9rem; resize:vertical; margin-top:8px;"></textarea>
+                </div>
+
+                <!-- שמות הצוות (לפני שנבחר מספר) -->
+                <div class="sim-fg" style="margin-top:14px;">
+                    <label style="font-weight:bold; color:var(--dark-blue);">שמות המשתתפים בצוות:</label>
+                    <input id="briefTeamNames" type="text" placeholder="לדוגמה: עדן גולן, נועה קירל, סטטיק ובן אל"
+                        style="width:100%; border:1px solid #ddd; border-radius:8px; padding:10px; font-size:0.9rem; margin-top:8px;">
+                </div>
+
+                <span class="btn-action-hint">👆 לאחר מילוי כל השדות — לחצו לשליחה</span><button id="briefingSubmitBtn" class="btn btn-success btn-action" onclick="submitBriefing()">
+                    ✅ שליחת תוכנית ההבראה — מעבר לבחירת תפקיד
+                </button>
+                <div id="briefingSubmittedMsg" class="briefing-submitted-msg" style="display:none;">
+                    ✅ תוכנית ההבראה נשלחה! עוברים לבחירת קבוצת עניין...
+                </div>
+            </div>
+
+        </div>
+        <!-- ========== סוף מסך בריפינג ========== -->
+
+        <!-- ========== המתנה לפתיחת בחירת קבוצות ========== -->
+        <div id="briefingWaitBlock" style="display:none; text-align:center; padding:50px 20px; background:#fffaf0; border:2px dashed var(--taxi-yellow); border-radius:14px; margin-bottom:20px;">
+            <div style="font-size:3.5rem; margin-bottom:16px;">📋</div>
+            <h2 style="color:var(--dark-blue); margin-bottom:10px;">תוכנית ההבראה נשלחה בהצלחה!</h2>
+            <p style="color:#555; font-size:1.05rem; margin-bottom:6px;">ממתינים למנחה שיפתח את בחירת קבוצות העניין לכל הכיתה.</p>
+            <p style="color:#888; font-size:0.9rem;">ברגע שהמנחה יאשר — הכרטיסים יופיעו כאן אוטומטית.</p>
+            <div style="margin-top:24px; display:inline-flex; align-items:center; gap:10px; background:white; border:1px solid #fde68a; border-radius:10px; padding:12px 20px;">
+                <span id="briefWaitDot" style="width:10px;height:10px;border-radius:50%;background:#f59e0b;display:inline-block;animation:pulse 1.5s infinite;"></span>
+                <span style="color:#92400e; font-weight:600; font-size:0.95rem;">ממתין לאישור המנחה...</span>
+            </div>
+        </div>
+        <!-- ========== סוף המתנה לבחירת קבוצות ========== -->
+
+        <div id="teamSetupBlock" style="display:none;">
+            <h2>👥 בחירת קבוצת עניין</h2>
+            <p style="color: #666; margin-bottom: 20px;">בחרו את קבוצת העניין שאתם מייצגים. לאחר הבחירה תוכלו לגבש את האסטרטגיה שלכם לפני תחילת הסבב.</p>
 
             <!-- בחירה ויזואלית באמצעות כרטיסים מעוצבים עם אייקונים -->
             <div class="teams-grid" id="teamsSelectionVisualGrid">
                 <!-- יטען דינמית לפי ההגדרות בפאנל המנהל -->
             </div>
 
-            <!-- פאנל גיבוש אסטרטגיה אינטגרטיבי - מופיע רק לאחר בחירת קבוצה -->
+            <!-- פאנל גיבוש אסטרטגיה אינטגרטיבי - מופיע לאחר בחירת קבוצה, לפני תחילת סבב 1 -->
             <div id="integratedStrategyPanel" class="strategy-builder-panel">
                 <div class="strategy-section-title">
-                    <span id="strategyPanelIcon">📊</span>
-                    <span id="strategyPanelTitle">גיבוש אסטרטגיית איכות - מודל QuickCab</span>
+                    <span id="strategyPanelIcon">🎯</span>
+                    <span id="strategyPanelTitle">שלב א' — גיבוש אסטרטגיית איכות לקראת סבב 1</span>
+                </div>
+
+                <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:12px 16px; margin-bottom:16px; font-size:0.9rem; color:#92400e;">
+                    <strong>⏳ שלב זה מתבצע לפני פתיחת סבב 1.</strong> לאחר שתנעלו את האסטרטגיה, תעברו למסך המתנה עד שהמנחה יפתח את המשמרת לכל הכיתה.
                 </div>
 
                 <p style="color: #555; font-size: 0.95rem; margin-bottom: 20px; line-height: 1.5;">
-                    כדי להתחיל את המשמרת, עליכם להגדיר את תוכנית העבודה ויעדי האיכות שלכם בהתאמה לתקני <strong>ISO 9001</strong>. תכנון זה ינחה אתכם בפתרון המשברים ובסופו של דבר יוצג במטה המרכזי למרצה.
+                    הגדירו את תוכנית העבודה ויעדי האיכות שלכם בהתאמה לתקני <strong>ISO 9001</strong>. תכנון זה ינחה אתכם בפתרון המשברים ויוצג במטה המרכזי למרצה.
                 </p>
 
                 <!-- ===== שלב 0: תכנון תוכנית הבראה ===== -->
                 <div class="phase0-panel">
                     <div class="strategy-section-title" style="border: none; margin-bottom: 8px;">
                         <span>🎯</span>
-                        <span>שלב 0: תכנון תוכנית הבראה</span>
+                        <span>שלב 0 — הקצאת תקציב ההבראה (קביעת יעדים)</span>
                     </div>
                     <p style="color: #555; font-size: 0.9rem; margin-bottom: 5px;">
                         בחרו את היעדים לתוכנית ההבראה של הצוות. עומד לרשותכם תקציב של <strong>100 נקודות</strong> — ניתן לחרוג, אך כדאי לתעדף בחוכמה!
@@ -999,24 +1279,29 @@
                 </div>
 
                 <div style="text-align: left;">
-                    <button class="btn btn-success" style="font-size: 1.1rem; padding: 14px 28px;" onclick="validateAndStartGame()">🔒 נעילת אסטרטגיה</button>
+                    <span class="btn-action-hint">👆 לאחר מילוי כל השדות — לחצו לנעילת האסטרטגיה</span><button class="btn btn-success btn-action" style="font-size:1.1rem; padding:14px 28px;" onclick="validateAndStartGame()">🔒 אישור תוכנית — ממתינים לפתיחת סבב 1</button>
                 </div>
             </div>
         </div>
 
-        <!-- מסך אחרי נעילת אסטרטגיה — מצב דמו: התחלה עצמאית -->
+        <!-- מסך המתנה למנחה (אחרי נעילת אסטרטגיה) -->
         <div id="teamWaitingBlock" style="display: none; text-align: center; padding: 50px 20px; background: #fffaf0; border: 2px dashed var(--taxi-yellow); border-radius: 12px; margin-top: 20px;">
             <div style="font-size: 4rem; margin-bottom: 15px;">⏳</div>
-            <h2 style="color: var(--dark-blue);">האסטרטגיה ננעלה בהצלחה!</h2>
+            <h2 style="color: var(--dark-blue);">האסטרטגיה ננעלה! ממתינים לפתיחת סבב 1</h2>
+            <p style="color:#666; margin-top:6px; font-size:0.95rem;">בחרתם: <strong id="waitingTeamNameDisplay" style="color:var(--dark-blue);"></strong></p>
 
-            <!-- לא בשימוש במצב דמו, נשאר לתאימות -->
-            <div id="waitingOnlineMsg" style="display:none;">
+            <!-- הודעת המתנה למנחה (מצב מקוון) -->
+            <div id="waitingOnlineMsg">
                 <p style="font-size: 1.15rem; color: #555; margin-top: 12px;">ממתינים למנחה שיפעיל את המשמרת...</p>
+                <p style="font-size: 0.95rem; color: #888; margin-top: 8px;">המשמרת תתחיל אוטומטית ברגע שהמנחה ילחץ "הפעל משמרת" בלוח הניהול.</p>
+                <div style="margin-top: 20px;">
+                    <span style="display:inline-block; width:12px; height:12px; background:var(--green-success); border-radius:50%; animation: pulse 1.5s infinite;"></span>
+                </div>
             </div>
 
-            <!-- כפתור התחלה עצמאית -->
+            <!-- כפתור התחלה ידנית (מצב לא מקוון בלבד) -->
             <div id="waitingOfflineStart" style="display: none;">
-                <p style="font-size: 1.05rem; color: #555; margin-top: 12px;">אתם מוכנים להתחיל!</p>
+                <p style="font-size: 1.05rem; color: #555; margin-top: 12px;">מצב עבודה מקומי — אין חיבור לענן הכיתתי.</p>
                 <p style="font-size: 0.9rem; color: #888; margin: 8px 0 18px 0;">לחצו על הכפתור כדי להתחיל את המשמרת כשאתם מוכנים:</p>
                 <button class="btn btn-success" style="font-size: 1.15rem; padding: 14px 36px;" onclick="manualStartShift()">▶️ התחל משמרת</button>
             </div>
@@ -1177,7 +1462,7 @@
                         <textarea id="teamCrisisJustificationInput" style="display:none;"></textarea>
                     </div>
 
-                    <button class="btn btn-success" style="width: 100%; margin-top: 20px; font-size: 1.1rem;" onclick="submitTeamActiveDecision()">🎯 אשר ובצע החלטה ניהולית</button>
+                    <span class="btn-action-hint">👆 לאחר מילוי כל השדות — לחצו לאישור</span><button class="btn btn-success btn-action" style="width:100%; margin-top:4px;" onclick="submitTeamActiveDecision()">🎯 אשר ובצע החלטה ניהולית</button>
                 </div>
             </div>
 
@@ -1202,8 +1487,7 @@
                 </div>
 
                 <div id="finishRoundMsg" style="margin-bottom:15px; font-size:0.95rem; color:#666;"></div>
-                <div id="roundAdvanceContainer" style="margin-bottom:15px;"></div>
-                <button class="btn btn-dark" onclick="resetTeamViewToSetup()">🔄 חזרה לבחירת אסטרטגיה (אותו סבב)</button>
+                <button class="btn btn-dark" onclick="resetTeamViewToSetup()">🔄 חזרה לבחירת אסטרטגיה</button>
             </div>
         </div>
     </div>
@@ -1234,7 +1518,7 @@
                 <div class="wiz-card" style="border-top-color:var(--taxi-yellow);">
                     <div class="wiz-icon">⏱️</div>
                     <h3>משך המשחק</h3>
-                    <p>כ-3 דקות משחק פעיל לכל סבב.</p>
+                    <p>15–30 דקות (נקבע על ידי המנחה).</p>
                 </div>
                 <div class="wiz-card" style="border-top-color:var(--green-success);">
                     <div class="wiz-icon">🏆</div>
@@ -1254,7 +1538,7 @@
             <div class="wiz-flow">
                 <div class="wiz-flow-item"><div class="wiz-flow-num">1</div><div class="wiz-flow-icon">📚</div><span>לומדים את ההנחיות</span></div>
                 <div class="wiz-flow-arrow">↓</div>
-                <div class="wiz-flow-item"><div class="wiz-flow-num">2</div><div class="wiz-flow-icon">🚀</div><span>ממשיכים בעצמכם לעמדת העבודה</span></div>
+                <div class="wiz-flow-item"><div class="wiz-flow-num">2</div><div class="wiz-flow-icon">🔓</div><span>המנהל פותח את הגישה</span></div>
                 <div class="wiz-flow-arrow">↓</div>
                 <div class="wiz-flow-item"><div class="wiz-flow-num">3</div><div class="wiz-flow-icon">👥</div><span>בוחרים קבוצה ובונים אסטרטגיה</span></div>
                 <div class="wiz-flow-arrow">↓</div>
@@ -1297,7 +1581,7 @@
                 </div>
                 <div class="wiz-flip" onclick="this.classList.toggle('open')">
                     <div class="wiz-flip-icon">🔄</div><h4>שלושה סבבים</h4>
-                    <div class="wiz-flip-body">סבב 1 ללמידה, סבב 2 לשיפור, וסבב 3 לניהול בעלי עניין. אתם עוברים בעצמכם בין הסבבים בלחיצת כפתור, ובסבב 2 תראו את תוצאות סבב 1 להשוואה.</div>
+                    <div class="wiz-flip-body">סבב 1 ללמידה, סבב 2 לשיפור, וסבב 3 לניהול בעלי עניין. המנהל מעביר בין הסבבים, ובסבב 2 תראו את תוצאות סבב 1 להשוואה.</div>
                 </div>
                 <div class="wiz-flip" onclick="this.classList.toggle('open')">
                     <div class="wiz-flip-icon">🤝</div><h4>בעלי עניין</h4>
@@ -1339,8 +1623,8 @@
                     </ul>
                 </div>
             </div>
-            <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:14px 18px; margin-top:18px; text-align:center;">
-                <strong style="color:var(--green-success);">✅ שימו לב:</strong> זהו מצב דמו עצמאי — לאחר שתעברו על ההנחיות, תוכלו להמשיך בעצמכם לעמדת העבודה.
+            <div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:10px; padding:14px 18px; margin-top:18px; text-align:center;">
+                <strong style="color:var(--orange-warn);">⏳ שימו לב:</strong> הכניסה לעמדת העבודה תיפתח רק לאחר שהמנהל יאשר. עד אז, עברו על ההנחיות והתנסו בסימולטור.
             </div>
 
             <!-- הסבר מורחב ומפורט (נשמר, נפתח בלחיצה) -->
@@ -1401,19 +1685,26 @@
                     </tr>
                     <tr>
                         <td><strong>משחק פעיל</strong></td>
-                        <td>3 דקות</td>
-                        <td>טיפול באירועים ייעודיים בזמן אמת (אירוע כל דקה)</td>
+                        <td>גמיש (נקבע ע"י המנחה)</td>
+                        <td>טיפול באירועים ייעודיים בזמן אמת</td>
                         <td>קבלת החלטות מהירות ונכונות</td>
                     </tr>
                     <tr>
                         <td><strong>סיכום</strong></td>
                         <td>3-5 דקות</td>
-                        <td>צפייה בתוצאות ומעבר לסבב הבא</td>
+                        <td>צפייה בתוצאות והעלאה לענן</td>
                         <td>למידה מההחלטות</td>
+                    </tr>
+                    <tr>
+                        <td><strong>דיון כיתתי</strong></td>
+                        <td>20-30 דקות</td>
+                        <td>המנחה מציג את כל הקבוצות ומנחה דיון מעמיק</td>
+                        <td>השוואה, רפלקציה ולמידה קולקטיבית לעומק</td>
                     </tr>
                 </table>
                 <p style="margin-top: 12px; font-size: 0.9rem; color: #555;">
-                    💡 <strong>הערה:</strong> במצב דמו זה המשמרת הפעילה קצובה ל-<strong>3 דקות</strong>, עם אירוע חדש כל דקה (סה"כ 3 אירועים). זמני ההכנה הם המלצה.
+                    💡 <strong>הערה:</strong> משך המשחק הפעיל גמיש לחלוטין — המנחה קובע אותו בפאנל הניהול (בין 10 ל-60 דקות),
+                    יחד עם תזמון האירועים והקצב ביניהם. זמני ההכנה והדיון הם המלצה ומותאמים לפי אורך השיעור.
                 </p>
             </div>
 
@@ -1866,8 +2157,8 @@
             <div class="guidelines-subsection">
                 <h4>⏱️ איך עובד ציר הזמן</h4>
                 <p>
-                    משך המשמרת קצוב ל-3 דקות. במהלך המשמרת יופיעו
-                    3 אירועים, אחד בכל דקה בערך.
+                    משך המשמרת ולוח האירועים נקבעים מראש על ידי המנחה. במהלך המשמרת יופיעו
+                    מספר אירועים (בין 1 ל-10), המתפזרים לאורך הזמן לפי הקצב שהמנחה הגדיר.
                     <strong>כל צוות מקבל אירועים שונים — רלוונטיים בדיוק למדדים ולאתגרים שלו.</strong>
                 </p>
                 <table class="guidelines-table">
@@ -1907,7 +2198,7 @@
             <div class="guidelines-highlight">
                 <strong>🎲 אירועים ייעודיים לכל צוות:</strong><br>
                 לכל אחד מ-8 הצוותים יש בנק של 10 אירועים רלוונטיים. בתחילת כל משמרת נבחרים אקראית
-                3 אירועים מתוך הבנק — כך שגם באותה קבוצה, הרצות שונות של המשחק
+                מתוך הבנק מספר האירועים שהמנחה קבע (1-10) — כך שגם באותה קבוצה, הרצות שונות של המשחק
                 ייתכן שיציגו אירועים שונים או בסדר שונה. לדוגמה:<br>
                 👥 Customers → חרם נוסעים, צניחת דירוג, דליפת פרטים<br>
                 🚗 Drivers → שביתת נהגים, מחירי דלק, ביטוח בריאות<br>
@@ -1970,9 +2261,9 @@
             <div class="guidelines-faq-item open" >
                 <h5>❓ כמה זמן המשחק נמשך?</h5>
                 <div class="guidelines-faq-answer">
-                    משך המשמרת קצוב ל-<strong>3 דקות</strong>.
-                    האירוע הראשון מופיע אוטומטית אחרי 10 שניות, ושני האירועים הנוספים
-                    מופיעים אחריו בקצב של אחד בכל דקה. בתום 3 הדקות המשמרת מסתיימת אוטומטית ועוברים למסך הסיכום.
+                    משך המשמרת נקבע על ידי המנחה (מינימום 10 דקות, ניתן להגדיל עד 60 דקות).
+                    האירוע הראשון מופיע אוטומטית אחרי 10 שניות, ושאר האירועים (1 עד 10, לפי בחירת המנחה)
+                    מופיעים אחריו לפי הקצב שהמנחה הגדיר בפאנל הניהול. בתום הזמן המשחק מסתיים אוטומטית והנתונים מועלים לענן.
                 </div>
             </div>
 
@@ -2028,18 +2319,20 @@
             </div>
 
             <div class="guidelines-faq-item open" >
-                <h5>❓ האם הנתונים שלי נשמרים?</h5>
+                <h5>❓ האם הנתונים שלי מועלים לענן?</h5>
                 <div class="guidelines-faq-answer">
-                    כן — כל החלטה נשמרת באופן מקומי במחשב שלכם (LocalStorage), כך שתוכלו לחזור ולהשוות בין הסבבים.
-                    זהו מצב דמו עצמאי, כך שאין צד שני שצופה בנתונים שלכם בזמן אמת.
+                    כן! כל החלטה מועלית מיידית לענן (Firebase). המנחה יכול לראות את הנתונים שלכם בזמן אמת בלוח המטה המרכזי.
+                    זה מאפשר למנחה לעקוב אחרי כל הקבוצות בו-זמנית ולהציג את התוצאות בסוף.
                 </div>
             </div>
 
             <div class="guidelines-faq-item open" >
                 <h5>❓ מה קורה אם רשת ה-Wi-Fi נופלת (מצב לא-מקוון)?</h5>
                 <div class="guidelines-faq-answer">
-                    אל דאגה — <strong>המערכת ממשיכה לעבוד ושומרת הכול מקומית במחשב שלכם</strong> בכל מקרה, עם או בלי חיבור לאינטרנט.
-                    תוכלו להמשיך לשחק כרגיל ללא הפרעה.
+                    אל דאגה — אם יש תקלה ברשת של המכללה/אוניברסיטה, <strong>המערכת ממשיכה לעבוד ושומרת הכול מקומית במחשב שלכם</strong>.
+                    תוכלו להמשיך לשחק כרגיל. ההבדל היחיד: הנתונים לא יסונכרנו עם המנחה בזמן אמת.
+                    בסיום הפעילות, פשוט לחצו על <strong>"💾 שמירה מקומית"</strong> כדי לשמור את התוצאות שלכם.
+                    כאשר החיבור יחזור — הסנכרון לענן יתחדש אוטומטית.
                 </div>
             </div>
 
@@ -2047,7 +2340,7 @@
                 <h5>❓ מה קורה אם בוחרים בחלופה "שגויה"?</h5>
                 <div class="guidelines-faq-answer">
                     אין "חלופה שגויה"! כל חלופה משפיעה על המדדים בצורה שונה. חלופה אחת עשויה להשפר שביעות רצון אך לפגוע ברווחיות.
-                    זה עקרון ניהול אמיתי — אתם צריכים לאזן בין מטרות שונות. שימו לב לנימוק שאתם נותנים, לא רק לבחירה עצמה.
+                    זה עקרון ניהול אמיתי — אתם צריכים לאזן בין מטרות שונות. המנחה יעריך אתכם לפי הנימוק, לא לפי הבחירה עצמה.
                 </div>
             </div>
 
@@ -2076,7 +2369,8 @@
             <div class="guidelines-faq-item open" >
                 <h5>❓ האם ניתן לשחק שוב אחרי סיום?</h5>
                 <div class="guidelines-faq-answer">
-                    כן! לחצו על "🔄 חזרה לבחירת אסטרטגיה" בסוף המשחק, או רעננו את הדף כדי להתחיל את כל הסימולציה מההתחלה.
+                    כן! לחצו על "🔄 חזרה למסך הבית" בסוף המשחק. אתם יכולים לבחור קבוצה אחרת או לשחק שוב עם אותה קבוצה.
+                    המנחה יכול לאפס את כל הנתונים בעזרת "🧹 איפוס קשיח" בפאנל המנהל.
                 </div>
             </div>
 
@@ -2086,64 +2380,73 @@
                     אם יש בעיה:<br>
                     • רעננו את הדף (F5 או Ctrl+R)<br>
                     • בדקו את חיבור האינטרנט<br>
-                    • נסו דפדפן אחר (Chrome / Firefox / Edge מומלצים)
+                    • נסו דפדפן אחר (Chrome / Firefox / Edge מומלצים)<br>
+                    • פנו למנחה לעזרה<br>
+                    • המנחה יכול להשתמש בפאנל המנהל כדי לאפס את המערכת אם נדרש
                 </div>
             </div>
 
             <div class="guidelines-faq-item open" >
                 <h5>❓ האם המשחק עובד בלי אינטרנט?</h5>
                 <div class="guidelines-faq-answer">
-                    המשחק עובד גם בלי אינטרנט! זהו מצב דמו עצמאי, והנתונים נשמרים תמיד במחשב המקומי (LocalStorage)
-                    — בלי תלות בחיבור לרשת.
+                    המשחק עובד גם בלי אינטרנט! הנתונים נשמרים במחשב המקומי (LocalStorage).
+                    עם זאת, <strong>בלי אינטרנט המנחה לא יראה את הנתונים שלכם בזמן אמת</strong>.
+                    אם יש אינטרנט, הכל מסתנכרן אוטומטית לענן.
                 </div>
             </div>
 
             <div class="guidelines-faq-item open" >
                 <h5>❓ כמה אנשים יכולים לשחק ביחד?</h5>
                 <div class="guidelines-faq-answer">
-                    במצב דמו זה זמינות <strong>6 קבוצות עניין</strong> לבחירה (Customers, Drivers, Dispatchers, Management, Service & Support, Maintenance).
-                    אתם משחקים לבד ובוחרים את הקבוצה שמעניינת אתכם.
+                    המשחק תומך ב-<strong>4, 6 או 8 קבוצות</strong> (המנחה קובע).
+                    כל קבוצה יכולה להיות בין 1-5 סטודנטים. בסך הכל, כיתה של 20-40 סטודנטים יכולה לשחק בו-זמנית,
+                    כל קבוצה במחשב נפרד.
                 </div>
             </div>
 
             <div class="guidelines-faq-item open" >
-                <h5>❓ זהו מצב דמו עצמאי — איך זה עובד בלי מנחה?</h5>
+                <h5>❓ מה המנחה רואה בפאנל המנהל?</h5>
                 <div class="guidelines-faq-answer">
-                    בגרסה זו אתם משחקים <strong>לבד, בקצב שלכם</strong> — אין צורך במנחה שיאשר מעברים בין שלבים.<br>
-                    ✅ מנחה וירטואלי (הפס הכחול בראש המסך + הודעות קופצות) ינחה אתכם בכל שלב מה לעשות<br>
-                    ✅ אתם לוחצים בעצמכם על "המשך לשלב הבא" כשאתם מוכנים<br>
-                    ✅ כל ההחלטות, המדדים והתוצאות שלכם נשמרים במחשב זה לאורך כל הסבבים<br>
-                    ✅ תוכלו לחזור ולהשוות בין הביצועים שלכם בכל סבב
+                    המנחה רואה:<br>
+                    ✅ כל הקבוצות שמשחקות כרגע (בזמן אמת)<br>
+                    ✅ את כל ההחלטות והנימוקים של כל קבוצה<br>
+                    ✅ את המדדים הסופיים של כל קבוצה<br>
+                    ✅ את תוכניות ההבראה והמנע של כולם<br>
+                    ✅ טבלה ייעודית לסבב 3 — מיפוי בעלי העניין, ההשקעות החברתיות ומדד החוסן של כל קבוצה<br>
+                    ✅ ⏱️ זמן שנותר בזמן אמת לכל צוות פעיל, עם אפשרות "🛑 סיים משמרת עכשיו" לכל צוות בנפרד<br>
+                    ✅ דוח מפורט שניתן לייצא ל-Excel
                 </div>
             </div>
 
             <div class="guidelines-faq-item open" >
-                <h5>❓ איך עוברים בין הסבבים (למידה / שיפור / בעלי עניין)?</h5>
+                <h5>❓ האם המנחה יכול לקצר משמרת שכבר רצה?</h5>
                 <div class="guidelines-faq-answer">
-                    בסיום כל סבב יופיע כפתור <strong>"➡️ המשך לסבב הבא"</strong> במסך הסיכום.
-                    לחיצה עליו מעבירה אתכם אוטומטית לסבב הבא, ובסבב 2 תוכלו לראות את התוצאות שלכם מסבב 1 כנקודת השוואה.
+                    כן, בשתי דרכים:<br>
+                    1️⃣ <strong>שינוי גלובלי:</strong> שינוי "הגדרת משך המשמרת" בפאנל המנהל נשלח דרך הענן לכל הכיתה
+                    ומשפיע גם על משמרות שכבר רצות — אם הזמן החדש כבר חלף עבור צוות מסוים, המשמרת שלו תסתיים אוטומטית.<br>
+                    2️⃣ <strong>סיום מיידי לצוות בודד:</strong> ליד כל צוות פעיל בלוח המטה המרכזי מופיע כפתור
+                    "🛑 סיים משמרת עכשיו" — הוא מעביר את הצוות הנבחר מיד למסך הסיכום עם המדדים הנוכחיים שלו, ללא קשר לזמן שנותר.
                 </div>
             </div>
 
             <div class="guidelines-faq-item open" >
-                <h5>❓ אפשר להתחיל מחדש?</h5>
+                <h5>❓ איך המנחה מאפס את המערכת לסבב חדש?</h5>
                 <div class="guidelines-faq-answer">
-                    כן — בכל שלב אפשר ללחוץ על "🔄 חזרה לבחירת אסטרטגיה" כדי להתחיל סבב מחדש,
-                    או לרענן את הדף כדי לאפס את כל ההתקדמות ולהתחיל את כל הסימולציה מההתחלה.
+                    המנחה נכנס לפאנל המנהל (קוד: 1234), לוחץ על "🧹 איפוס קשיח מיידי",
+                    ומאשר. זה מוחק את כל הנתונים מהענן ומכל המחשבים, והמערכת מוכנה לסבב חדש.
                 </div>
             </div>
 
         </div>
-
 
         <!-- כפתור חזרה לתחילת הדף -->
                 </div>
             </div>
 
             <div class="wiz-nav" style="justify-content:center; margin-top:30px;">
-                <button id="wizStartBtn" class="btn btn-success" style="font-size:1.2rem; padding:16px 44px;" onclick="markGuidelinesDone(); switchActiveTab('team_station')">🚀 הבנתי, התחל סימולציה</button>
+                <button id="wizStartBtn" class="btn btn-secondary" style="font-size:1.2rem; padding:16px 44px; opacity:0.6; cursor:not-allowed;" disabled onclick="markGuidelinesDone(); switchActiveTab('team_station')">⏳ ממתינים לאישור המנהל...</button>
             </div>
-            <div id="gateUnlockedNote" style="display:block; text-align:center; margin-top:10px; color:var(--green-success); font-weight:bold;">✅ אתם מוכנים! ניתן להיכנס לעמדת העבודה.</div>
+            <div id="gateUnlockedNote" style="display:none; text-align:center; margin-top:10px; color:var(--green-success); font-weight:bold;">✅ המנהל אישר! ניתן להיכנס לעמדת העבודה.</div>
             <div style="text-align:center; margin-top:14px;">
                 <button class="btn btn-secondary" onclick="wizGo(1)">↻ חזרה להתחלה</button>
             </div>
@@ -2156,29 +2459,23 @@
     <div id="simulator_panel" class="view-panel">
         <div id="simWorksheet">
             <div style="background:#eef6ff; border:1px solid #bcdcff; border-radius:12px; padding:16px 20px; margin-bottom:20px;">
-                <h2 style="border:none; margin:0; color:var(--dark-blue);">🔬 סימולטור בקרת איכות + דף עבודה (PDCA)</h2>
+                <h2 style="border:none; margin:0; color:var(--dark-blue);">🔬 סימולטור בקרת איכות</h2>
                 <p style="color:#555; margin-top:8px;">כלי לימוד עצמאי מבוסס מעגל PDCA ועקרונות ISO 9001. הריצו שני סיבובי סימולציה, נתחו את הגרפים, ובסוף ייצאו דף עבודה מלא כ-PDF. <strong>הכלי לא משפיע על הציון במשחק.</strong></p>
             </div>
 
             <!-- מקטע 1: פרטי צוות -->
             <div class="sim-card" style="margin-bottom:20px;">
-                <h3>📋 מקטע 1: פרטי הצוות והזירה</h3>
-                <div class="sim-grid2">
-                    <div class="sim-fg">
-                        <label>שם / מספר הצוות — שמות המשתתפים:</label>
-                        <input type="text" id="simTeamName" placeholder="לדוגמה: צוות 3 — עדן גולן, נועה קירל, סטטיק ובן אל">
-                    </div>
-                    <div class="sim-fg">
-                        <label>העיר שהוקצתה לצוות:</label>
-                        <input type="text" id="simCityName" placeholder="לדוגמה: תל אביב">
-                    </div>
+                <h3>📋 1: פרטי הצוות</h3>
+                <div class="sim-fg">
+                    <label>שם / מספר הצוות — שמות המשתתפים:</label>
+                    <input type="text" id="simTeamName" placeholder="לדוגמה: צוות 3 — עדן גולן, נועה קירל, סטטיק ובן אל">
                 </div>
             </div>
 
             <!-- מקטע 2: סיבוב 1 -->
             <div class="sim-card" style="margin-bottom:20px;">
-                <h3>🔍 מקטע 2: סיבוב 1 – ניתוח מצב קיים (Baseline)</h3>
-                <button class="btn" style="background:var(--blue-info); color:white; width:100%;" onclick="simRun(1)">🚀 הרץ סימולציה - סיבוב 1</button>
+                <h3>🔍 2: סיבוב 1 – ניתוח מצב קיים (Baseline)</h3>
+                <span class="btn-action-hint">👆 לחצו להרצת הסימולציה</span><button class="btn btn-action" style="background:var(--blue-info); color:white; width:100%;" onclick="simRun(1)">🚀 הרץ סימולציה — סיבוב 1</button>
                 <div class="sim-stats-row">
                     <div>זמן המתנה ממוצע: <span class="sim-stat-val" id="simAvg1">-</span></div>
                     <div>חריגות מבקרה: <span class="sim-stat-val" id="simOut1" style="color:var(--red-danger)">-</span></div>
@@ -2195,14 +2492,14 @@
 
             <!-- מקטע 3: תכנון + סיבוב 2 -->
             <div class="sim-card">
-                <h3>🛠️ מקטע 3: שלב התכנון והרצת סיבוב 2 (Plan &amp; Do)</h3>
+                <h3>🛠️ 3: שלב התכנון (Plan &amp; Do)</h3>
                 <div class="sim-budget-badge">💰 תקציב פנוי: <span id="sim-budget-ui">100</span> נקודות</div>
                 <div id="sim-investments-list"></div>
                 <div class="sim-fg" style="margin-top:12px;">
                     <label>השקעות שבוצעו בפועל (עבור ה-PDF):</label>
                     <input type="text" id="simInvestPlain" readonly placeholder="יתעדכן אוטומטית לפי הסימונים למעלה">
                 </div>
-                <button class="btn" style="background:var(--blue-info); color:white; width:100%; margin-top:12px;" onclick="simRun(2)">🚀 הרץ סימולציה משופרת - סיבוב 2</button>
+                <span class="btn-action-hint">👆 לחצו להרצת הסימולציה המשופרת</span><button class="btn btn-action" style="background:var(--blue-info); color:white; width:100%; margin-top:4px;" onclick="simRun(2)">🚀 הרץ סימולציה משופרת — סיבוב 2</button>
                 <div class="sim-stats-row">
                     <div>זמן ממוצע חדש: <span class="sim-stat-val" id="simAvg2">-</span></div>
                     <div>חריגות חדשות: <span class="sim-stat-val" id="simOut2" style="color:var(--red-danger)">-</span></div>
@@ -2215,12 +2512,296 @@
                         <textarea id="simConclusions" rows="9" placeholder="הסבירו כיצד השפיעו השקעות המנע על יציבות התהליך וצמצום השונות..."></textarea>
                     </div>
                 </div>
-                <button class="btn btn-success" style="width:100%; margin-top:20px; font-size:1.1rem;" onclick="simExportPDF()">💾 שמור והורד דף עבודה כ-PDF</button>
+                <span class="btn-action-hint">👆 לחצו לשמירת דף העבודה</span><button class="btn btn-success btn-action" style="width:100%; margin-top:4px;" onclick="simExportPDF()">💾 שמור והורד דף עבודה כ-PDF</button>
+                <span class="btn-action-hint">👆 לחצו לשליחת התשובות למנחה</span><button class="btn btn-action" style="background:var(--purple-holder); color:white; width:100%; margin-top:4px;" onclick="simSendToFacilitator()">📤 שלח תשובות למנחה (למצגת)</button>
             </div>
         </div>
     </div>
 
 
+    <!-- ==================== 🖥️ מצגת תוצאות ==================== -->
+    <div id="presentation_panel" class="view-panel">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+            <div>
+                <h2 style="border:none; margin:0; color:var(--dark-blue);">🖥️ מצגת תוצאות — דפי עבודה</h2>
+                <p style="color:#555; margin-top:6px;">תשובות הצוותים מופיעות כאן אוטומטית ברגע שהם שולחים. רענון בזמן אמת.</p>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <span id="presCount" style="background:#7c3aed; color:white; padding:8px 16px; border-radius:20px; font-weight:bold;">0 צוותים</span>
+                <button class="btn btn-danger" onclick="presClear()">🧹 נקה הכל</button>
+            </div>
+        </div>
+        <div id="presContent">
+            <div style="text-align:center; padding:60px 20px; color:#888;">
+                <div style="font-size:3rem;">📭</div>
+                <p style="font-size:1.1rem; margin-top:10px;">עדיין לא התקבלו דפי עבודה. הם יופיעו כאן ברגע שצוותים ישלחו.</p>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ==================== 🔐 פאנל מנהל ==================== -->
+    <div id="admin_control_panel" class="view-panel">
+
+        <!-- מסך נעילת קוד סודי -->
+        <div id="adminLockView" class="admin-lock-screen">
+            <div style="font-size: 4rem; margin-bottom: 15px;">🔐</div>
+            <h2>כניסת מנהל סדנה / מרצה</h2>
+            <p style="color: #666; margin-bottom: 15px;">הזינו קוד גישה סודי (PIN) כדי לפתוח את אפשרויות הניהול ולוח המטה המרכזי:</p>
+
+            <div class="pin-input-container">
+                <input type="password" id="adminPinInput" class="input-control" style="max-width: 250px; text-align: center; font-size: 1.5rem; letter-spacing: 5px;" placeholder="••••" onkeyup="checkAdminPinValue()">
+            </div>
+            <button class="btn btn-dark" onclick="submitAdminPinCheck()">התחבר</button>
+        </div>
+
+        <!-- תוכן פאנל מנהל לאחר פתיחה מאובטחת -->
+        <div id="adminContentView" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 25px;">
+                <h2>⚙️ פאנל מנהל</h2>
+                <button class="btn btn-secondary" onclick="lockAdminPanel()">🔒 נעל פאנל</button>
+            </div>
+
+            <!-- אינדיקטור מצב חיבור (גלוי רק למנהל) -->
+            <div class="sync-indicator-container" style="margin-bottom: 20px; justify-content: flex-start;">
+                <div id="cloudSyncStatus">
+                    <span id="cloudSyncDot"></span>
+                    <span id="cloudSyncText">מתחבר לענן הסדנה...</span>
+                </div>
+            </div>
+
+            <!-- הגדרות וכלי ניהול הסדנה -->
+            <div class="admin-control-grid" style="margin-bottom: 30px;">
+
+                <!-- כרטיס הגדרת כמות צוותים -->
+                <div class="admin-card" style="border-top-color: var(--taxi-yellow); margin-bottom: 0;">
+                    <h3>👥 הגדרת כמות צוותים כיתתית</h3>
+                    <p style="font-size: 0.9rem; color: #666; margin: 10px 0 15px 0;">קבעו את כמות הצוותים הפעילים בסדנה הנוכחית. בחירה זו משפיעה ישירות על אפשרויות בחירת הקבוצות של הסטודנטים בעמדה ועל ה-HQ:</p>
+                    <select id="teamCountConfigInput" class="input-control" onchange="onAdminTeamCountChange()">
+                        <option value="4">4 צוותים (Customers, Drivers, Dispatchers, Management)</option>
+                        <option value="6" selected>6 צוותים (+ Service, Maintenance)</option>
+                        <option value="8">8 צוותים (+ Finance, Safety & Compliance)</option>
+                    </select>
+                </div>
+
+                <!-- כרטיס הגדרת משך המשחק -->
+                <div class="admin-card" style="border-top-color: var(--blue-info); margin-bottom: 0;">
+                    <h3>⏱️ הגדרת משך המשמרת</h3>
+                    <p style="font-size: 0.9rem; color: #666; margin: 10px 0 15px 0;">קבעו כמה זמן תימשך משמרת כל צוות. ההגדרה נשלחת לכל הכיתה דרך הענן ומשפיעה גם על משמרות שכבר רצות (אם תקצרו את הזמן ל-12 דקות וצוות כבר שיחק 13, הוא יסתיים אוטומטית). לסיום מיידי של צוות בודד ללא תלות בזמן — השתמשו בכפתור "🛑 סיים משמרת עכשיו" שמופיע ליד כל צוות פעיל בלוח המטה. האירועים יתפזרו לאורך הזמן לפי הקצב שתגדירו בכרטיס האירועים:</p>
+                    <select id="gameDurationConfigInput" class="input-control" onchange="onAdminGameDurationChange()">
+                        <option value="10" selected>10 דקות (ברירת מחדל)</option>
+                        <option value="15">15 דקות</option>
+                        <option value="20">20 דקות</option>
+                        <option value="25">25 דקות</option>
+                        <option value="30">30 דקות</option>
+                        <option value="45">45 דקות</option>
+                        <option value="60">60 דקות (שעה)</option>
+                    </select>
+                </div>
+
+                <!-- כרטיס הגדרת אירועים -->
+                <div class="admin-card" style="border-top-color: var(--purple-holder); margin-bottom: 0;">
+                    <h3>🎲 הגדרת אירועים</h3>
+                    <p style="font-size: 0.9rem; color: #666; margin: 10px 0 15px 0;">האירוע הראשון מופיע אוטומטית אחרי 10 שניות. קבעו את הקצב בין האירועים וכמה אירועים יופיעו. כל צוות יקבל אירועים רלוונטיים למדדים שלו:</p>
+                    
+                    <div style="background:#eef6ff; border:1px solid #bcdcff; border-radius:8px; padding:10px; margin-bottom:12px; font-size:0.85rem; color:#1a5b9e;">
+                        ⏳ <strong>אירוע ראשון:</strong> 10 שניות מתחילת המשמרת (קבוע)
+                    </div>
+                    <!-- שדה מוסתר לתאימות: זמן ההתחלה קבוע ל-10 שניות -->
+                    <select id="eventStartConfigInput" style="display:none;"><option value="0.1667" selected>10s</option></select>
+
+                    <label style="font-size: 0.85rem; font-weight: bold; color: #444;">⏱️ קצב בין אירועים (דקות):</label>
+                    <select id="eventIntervalConfigInput" class="input-control" style="margin-bottom: 12px;">
+                        <option value="1">1 דקה</option>
+                        <option value="2">2 דקות</option>
+                        <option value="3" selected>3 דקות</option>
+                        <option value="4">4 דקות</option>
+                        <option value="5">5 דקות</option>
+                        <option value="7">7 דקות</option>
+                        <option value="10">10 דקות</option>
+                    </select>
+
+                    <label style="font-size: 0.85rem; font-weight: bold; color: #444;">🔢 מספר אירועים בסך הכל:</label>
+                    <select id="eventCountConfigInput" class="input-control">
+                        <option value="1">1 אירוע</option>
+                        <option value="2">2 אירועים</option>
+                        <option value="3" selected>3 אירועים</option>
+                        <option value="4">4 אירועים</option>
+                        <option value="5">5 אירועים</option>
+                        <option value="6">6 אירועים</option>
+                        <option value="7">7 אירועים</option>
+                        <option value="8">8 אירועים</option>
+                        <option value="9">9 אירועים</option>
+                        <option value="10">10 אירועים (כל הבנק)</option>
+                    </select>
+                </div>
+
+                <!-- כרטיס איפוס קשיח -->
+                <div class="admin-card" style="border-top-color: var(--red-danger); margin-bottom: 0;">
+                    <h3>🧹 איפוס מערכת קשיח (Hard Reset)</h3>
+                    <p style="font-size: 0.9rem; color: #666; margin: 10px 0 15px 0;">פעולה זו מוחקת את כל נתוני המשחק, ההיסטוריה וההחלטות של כל הצוותים הן מהענן והן מהמכשיר הנוכחי, ומחזירה את המערכת למצבה ההתחלתי.</p>
+                    <button class="btn btn-danger" style="width: 100%;" onclick="executeHardResetEverything()">🧹 איפוס קשיח מיידי</button>
+                <!-- כפתור איפוס מצגת -->
+                    <button class="btn" onclick="resetPresentationFromAdmin()" style="
+                     width: 100%;
+                     background: linear-gradient(135deg, #a855f7, #7c3aed);
+                     color: white;
+                     border: none;
+                     padding: 12px;
+                     border-radius: 8px;
+                     cursor: pointer;
+                     font-weight: bold;
+                     font-size: 1rem;
+                     margin-top: 10px;
+                     ">
+                     🎬 איפוס מצגת תוצאות
+                    </button>
+                </div>
+
+                <!-- כרטיס הזרקת נתוני דמו -->
+                <div class="admin-card" style="border-top-color: var(--green-success); margin-bottom: 0;">
+                    <h3>📊 הזרקת נתוני דמו (Lecturer Demo Mode)</h3>
+                    <p style="font-size: 0.9rem; color: #666; margin: 10px 0 15px 0;">הזריקו מיידית נתוני משחק פיקטיביים לענן עבור הצוותים, לצורך הדגמת לוח המטה המרכזי ודרך ניתוח המדדים של כולם.</p>
+                    <button class="btn btn-success" style="width: 100%;" onclick="injectLecturerDemoData()">📊 הזרק נתוני דמו כיתתיים</button>
+                </div>
+
+                <!-- כרטיס פתיחת גישה לעמדת העבודה -->
+                <div class="admin-card" style="border-top-color: var(--orange-warn); margin-bottom: 0;">
+                    <h3>🔓 פתיחת גישה לעמדת העבודה</h3>
+                    <p style="font-size: 0.9rem; color: #666; margin: 10px 0 15px 0;">לאחר שהצוותות שלחו את תוכנית ההבראה (בריפינג), לחצו כאן כדי לפתוח את <strong>בחירת קבוצות העניין</strong> לכל הכיתה בו-זמנית.</p>
+                    <button class="btn" style="width: 100%; background: var(--orange-warn); color: white;" onclick="facilitatorUnlockSimulator()">🔓 פתח בחירת קבוצות לכל הכיתה</button>
+                    <button class="btn btn-secondary" style="width: 100%; margin-top: 10px;" onclick="facilitatorLockSimulator()">🔒 החזר נעילה (דרוש שוב לימוד הנחיות)</button>
+                </div>
+
+                <!-- כרטיס ניהול סבבים -->
+                <div class="admin-card" style="border-top-color: var(--blue-info); margin-bottom: 0;">
+                    <h3>🔄 ניהול סבבי משחק</h3>
+                    <p style="font-size: 0.9rem; color: #666; margin: 10px 0 15px 0;">המשחק מתנהל בשני סבבים: <strong>סבב 1 (למידה)</strong> ו-<strong>סבב 2 (שיפור)</strong>. לאחר הדיון הכיתתי, העבירו את כל הכיתה לסבב 2 כדי שהצוותים ישפרו את האסטרטגיה.</p>
+                    <div style="background:white; padding:10px; border-radius:6px; margin-bottom:12px; text-align:center; border:1px solid #e2e8f0;">
+                        סבב נוכחי: <strong style="font-size:1.2rem; color:var(--blue-info);" id="adminCurrentRound">1</strong>
+                    </div>
+                    <button class="btn" style="width:100%; background:var(--green-success); color:white;" onclick="facilitatorSetRound(2)">▶️ מעבר לסבב 2 (שיפור) לכל הכיתה</button>
+                    <button class="btn" style="width:100%; margin-top:10px; background:var(--purple-holder); color:white;" onclick="facilitatorSetRound(3)">🤝 מעבר לסבב 3 (בעלי עניין) לכל הכיתה</button>
+                    <button class="btn btn-secondary" style="width:100%; margin-top:10px;" onclick="facilitatorSetRound(1)">↩️ חזרה לסבב 1 (למידה)</button>
+                </div>
+
+                <!-- כרטיס גישה לסימולטור -->
+                <div class="admin-card" style="border-top-color: #0ea5e9; margin-bottom: 0;">
+                    <h3>🔬 גישה לסימולטור בקרת איכות</h3>
+                    <p style="font-size: 0.9rem; color: #666; margin: 10px 0 15px 0;">הסימולטור (דף העבודה PDCA) נעול לסטודנטים כברירת מחדל. פתחו את הגישה כשתרצו שהכיתה תתחיל להשתמש בו (דורש חיבור לענן).</p>
+                    <div style="background:white; padding:10px; border-radius:6px; margin-bottom:12px; text-align:center; border:1px solid #e2e8f0;">
+                        מצב נוכחי: <strong id="adminSimStatus" style="color:#dc2626;">🔒 נעול</strong>
+                    </div>
+                    <button class="btn" style="width:100%; background:#0ea5e9; color:white;" onclick="facilitatorUnlockSimulatorTool()">🔬 פתח גישה לסימולטור</button>
+                    <button class="btn btn-secondary" style="width:100%; margin-top:10px;" onclick="facilitatorLockSimulatorTool()">🔒 נעל סימולטור</button>
+                </div>
+
+                <!-- כרטיס סטטיסטיקה וניהול פנימי -->
+                <div class="admin-card" style="border-top-color: var(--blue-info); margin-bottom: 0;">
+                    <h3>📡 ניהול בסיס נתונים</h3>
+                    <p style="font-size: 0.9rem; color: #666; margin: 10px 0 15px 0;">צפייה ישירה במספר הצוותים השמורים כעת בזיכרון המקומי ובסנכרון הענן של המערכת:</p>
+                    <div style="background: white; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-weight: bold; border: 1px solid #e2e8f0;">
+                        סטטוס: <span id="adminDatabaseStatusText">0 צוותים שמורים</span>
+                    </div>
+                    <button class="btn btn-primary" style="width: 100%;" onclick="refreshAdminDatabaseStats()">🔄 רענן סטטיסטיקה</button>
+                </div>
+
+            </div>
+
+            <!-- לוח מטה מרכזי (HQ) מובנה בתוך הניהול -->
+            <div style="border-top: 3px double #cbd5e1; padding-top: 30px; margin-top: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; background: #fffdf5; border: 2px solid #f1c40f; padding: 20px; border-radius: 12px;">
+                    <div style="max-width: 750px;">
+                        <h3 style="color: var(--dark-blue); font-size: 1.4rem; display: flex; align-items: center; gap: 8px;">👑 לוח המטה המרכזי (Classroom HQ Dashboard)</h3>
+                        <p style="font-size: 0.95rem; color: #555; margin-top: 5px; line-height: 1.5;">
+                            כלי זה נועד להקרנה ישירה על מקרן כיתתי מתוך פאנל המנחה. הנתונים של כל הצוותים המשחקים בכיתה מסתנכרנים כאן בזמן אמת ללא צורך בריענון ידני.
+                        </p>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-primary" style="font-size: 0.95rem;" onclick="renderHqDashboardGrid()">🔄 רענן נתוני כיתה</button>
+                        <button class="btn btn-success" style="font-size: 0.95rem;" onclick="exportToCSVReport()">📥 ייצא דוח פעילות ל-Excel</button>
+                    </div>
+                </div>
+
+                <!-- 📋 טבלת מעקב מפורטת וניהול החלטות -->
+                <div style="background: white; border: 1px solid #cbd5e1; border-radius: 12px; padding: 20px; margin-bottom: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); overflow-x: auto;">
+                    <h3 style="color: var(--dark-blue); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">📋 דוח אינטגרטיבי - תחקיר אסטרטגי ומשברים</h3>
+                    <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">צפייה ישירה ומעקב מורחב של המנחה: באילו אסטרטגיות ויעדים (ISO 9001) בחרו הצוותים, ומה היו נימוקי מערכת האיכות שלהם בזמן טיפול במשברים.</p>
+
+                    <table class="sim-table" style="width: 100%; min-width: 1000px;">
+                        <thead>
+                            <tr>
+                                <th style="width: 12%;">צוות</th>
+                                <th style="width: 12%;">אסטרטגיה מונעת</th>
+                                <th style="width: 20%;">יעדי איכות (לפני משחק)</th>
+                                <th style="width: 20%;">אירועים ומשברים</th>
+                                <th style="width: 10%; text-align: center;">החלטה</th>
+                                <th style="width: 16%;">נימוק מענה (ISO 9001)</th>
+                                <th style="width: 10%; text-align: center;">מדדים סופיים</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detailedDebriefTableBody">
+                            <!-- יטען דינמית -->
+                        </tbody>
+                    </table>
+                </div>
+
+
+                <!-- 📝 טבלת בריפינג: תוכניות הבראה של הצוותות -->
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 20px; margin-bottom: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); overflow-x: auto;">
+                    <h3 style="color: #166534; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">📝 דוח בריפינג — תוכניות הבראה של הצוותות (לפני בחירת תפקיד)</h3>
+                    <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">ניתוח סיבות שורש, מדדי KPI שהצוותות הגדירו, וחלוקת תקציב ההבראה — לפני שנכנסו למשחק.</p>
+                    <button class="btn btn-secondary" style="margin-bottom:12px; font-size:0.85rem;" onclick="renderBriefingTable()">🔄 רענן</button>
+                    <table class="sim-table" style="width: 100%; min-width: 1100px;">
+                        <thead>
+                            <tr>
+                                <th style="width:10%;">צוות</th>
+                                <th style="width:22%;">ניתוח סיבות שורש</th>
+                                <th style="width:22%;">3 מדדי KPI</th>
+                                <th style="width:28%;">חלוקת תקציב (100 נק')</th>
+                                <th style="width:18%;">נימוק חלוקה</th>
+                            </tr>
+                        </thead>
+                        <tbody id="briefingDebriefTableBody">
+                            <tr><td colspan="5" style="text-align:center; color:#94a3b8; padding:20px;">טרם התקבלו נתוני בריפינג...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 🤝 טבלה ייעודית - סבב 3: ניהול בעלי עניין (ISO 4.2) -->
+                <div style="background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 12px; padding: 20px; margin-bottom: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); overflow-x: auto;">
+                    <h3 style="color: var(--purple-holder); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">🤝 דוח סבב 3 - ניהול בעלי עניין ותלות הדדית (ISO 9001 סעיף 4.2)</h3>
+                    <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">סבב ייחודי זה נמדד בנפרד מסבבים 1-2: כיצד כל צוות מיפה ותעדף את בעלי העניין שלו, אילו השקעות חברתיות ביצע, ומה מדד החוסן הארגוני שהשיג.</p>
+
+                    <table class="sim-table" style="width: 100%; min-width: 1000px;">
+                        <thead>
+                            <tr>
+                                <th style="width: 14%;">צוות</th>
+                                <th style="width: 30%;">מיפוי בעלי עניין (⭐ = קריטי לצוות זה)</th>
+                                <th style="width: 12%; text-align: center;">פתרונות נכונים</th>
+                                <th style="width: 20%;">השקעות חברתיות שבוצעו</th>
+                                <th style="width: 12%; text-align: center;">תקציב שנותר</th>
+                                <th style="width: 12%; text-align: center;">מדד חוסן</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stakeholderDebriefTableBody">
+                            <!-- יטען דינמית -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- כרטיסי סיכום גרפיים לכל קבוצה -->
+                <div style="margin-top: 20px;">
+                    <h3 style="color: var(--dark-blue); margin-bottom: 15px;">📊 כרטיסי סיכום קבוצתיים (Team Scorecards)</h3>
+                    <div id="hqDashboardGrid" class="admin-control-grid">
+                        <!-- נתונים יטענו ישירות מהענן / LocalStorage -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
 
     <!-- פוטנוט תחתון קבוע עם קרדיט הפיתוח -->
     <footer>
@@ -2581,24 +3162,16 @@
     let activeGlobalInvestments = [];
     const ADMIN_PIN_CODE = "1234";
 
-    // ⚙️ מצב דמו: ערכי ברירת מחדל קבועים (במקום הגדרות שהמנהל היה קובע בפאנל הניהול)
-    const DEMO_CONFIG = {
-        teamCount: 6,           // כמות קבוצות העניין הזמינות לבחירה
-        gameDurationMinutes: 3, // משך משמרת פעילה (דקות)
-        eventIntervalMinutes: 1,// קצב הופעת אירועים (דקות) — אירוע כל דקה
-        eventCount: 3           // מספר אירועים במשמרת
-    };
-
-    // אתחול תשתיות ענן פנימיות (מצב דמו: לענן תפקיד אופציונלי בלבד לשמירת היסטוריה/אירועי שרשרת — אין שום שער מנהל)
-    const appId = 'quickcab-workshop-demo';
+    // אתחול תשתיות ענן פנימיות
+    const appId = 'quickcab-workshop';
     let db = null;
     let auth = null;
     let currentUser = null;
     let firebaseUnsubscribe = null;
-    let managerApproved = true; // מצב דמו: עמדת העבודה פתוחה תמיד, אין מנהל שמאשר
-    let currentRound = 1; // סבב נוכחי: 1 (למידה) / 2 (שיפור) / 3 (בעלי עניין) — המשתתף מתקדם בעצמו
-    let simulatorToolUnlocked = true; // מצב דמו: הסימולטור פתוח תמיד
-    let sharedGameDurationMinutes = null; // לא רלוונטי במצב דמו (אין משך משמרת גלובלי שנקבע ע"י מנהל)
+    let managerApproved = false; // שער עמדת העבודה — נפתח רק באישור המנהל (סמכות סופית)
+    let currentRound = 1; // סבב נוכחי: 1 (למידה) או 2 (שיפור) — נשלט ע"י המנהל דרך הענן
+    let simulatorToolUnlocked = false; // גישת הסטודנטים לסימולטור — נפתח ע"י המנהל
+    let sharedGameDurationMinutes = null; // משך המשמרת שהמנחה הגדיר גלובלית (דרך הענן) — null = לא הוגדר, ייקרא מהשדה המקומי
 
     async function setupSyncSystem() {
         try {
@@ -2614,11 +3187,44 @@
             if (user) {
                 setOnlineModeIndicator();
                 startLiveCloudSyncListener();
-                // מצב דמו: אין מאזין לשער מנהל — הגישה תמיד פתוחה
+                startGateConfigListener();
             } else {
                 setOfflineModeIndicator();
             }
         });
+    }
+
+    // מאזין להרשאת המנהל לפתיחת עמדת העבודה לכל הכיתה
+    let gateConfigUnsub = null;
+    function startGateConfigListener() {
+        if (!currentUser || !db) return;
+        const ref = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'gameSettings');
+        if (gateConfigUnsub) gateConfigUnsub();
+        gateConfigUnsub = onSnapshot(ref, (snap) => {
+            const data = snap.exists() ? snap.data() : {};
+            applyGateState(data.simulatorUnlocked === true);
+            // עדכון הסבב הנוכחי מהענן
+            const round = (data.currentRound === 2 || data.currentRound === 3) ? data.currentRound : 1;
+            applyRoundState(round);
+            // עדכון גישת הסימולטור
+            applySimulatorToolState(data.simulatorToolUnlocked === true);
+            // עדכון משך המשמרת הגלובלי שהמנחה הגדיר
+            const newDuration = (typeof data.gameDurationMinutes === 'number' && data.gameDurationMinutes > 0) ? data.gameDurationMinutes : null;
+            const durationChanged = (newDuration !== sharedGameDurationMinutes);
+            sharedGameDurationMinutes = newDuration;
+
+            // אם יש משמרת פעילה כרגע — נעדכן את משך הזמן שלה מיד (כולל סיום אוטומטי אם כבר חרגנו מהזמן החדש)
+            if (durationChanged && newDuration && teamState && teamState.shiftStarted && !teamState.shiftFinished) {
+                const newTotalSeconds = newDuration * 60;
+                if (newTotalSeconds !== gameTotalSeconds) {
+                    gameTotalSeconds = newTotalSeconds;
+                    console.log(`⏱️ Shift duration updated live to ${newDuration} min`);
+                    if (gameTimeSeconds >= gameTotalSeconds) {
+                        finishActiveTeamShift();
+                    }
+                }
+            }
+        }, (err) => console.error('Gate config listener error:', err.code, err.message));
     }
 
     // מעדכן את תצוגת הסבב הנוכחי בכל המכשירים
@@ -2657,7 +3263,10 @@
                 initStakeholderRound();
             } else {
                 stakeholderPanel.style.display = 'none';
-                if (normalSetup && document.getElementById('teamGameplayBlock').style.display === 'none') {
+                const bwait = document.getElementById('briefingWaitBlock');
+                const bblock = document.getElementById('briefingBlock');
+                const briefingDone = (!bblock || bblock.style.display === 'none') && (!bwait || bwait.style.display === 'none');
+                if (normalSetup && document.getElementById('teamGameplayBlock').style.display === 'none' && briefingDone) {
                     normalSetup.style.display = 'block';
                 }
             }
@@ -3034,24 +3643,102 @@
         }
     };
 
-    // מצב דמו: עמדת העבודה תמיד פתוחה — הפונקציה נשארת לתאימות עם קוד קיים אך לא חוסמת איש
+    // מעדכן את מצב השער והכפתור לפי אישור המנהל
     function applyGateState(unlocked) {
-        managerApproved = true; // בדמו: תמיד פתוח, אין מנהל שמאשר
+        const btn = document.getElementById('wizStartBtn');
+        const note = document.getElementById('gateUnlockedNote');
+        if (unlocked) {
+            managerApproved = true;
+            console.log('🔓 Simulator access approved by facilitator (cloud)');
+            if (btn) {
+                btn.disabled = false;
+                btn.className = 'btn btn-success';
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                btn.innerText = '🚀 הבנתי, התחל סימולציה';
+            }
+            if (note) note.style.display = 'block';
+            // אם הצוות סיים בריפינג אך טרם בחר קבוצה — הצג את בחירת הקבוצות
+            const briefWait = document.getElementById('briefingWaitBlock');
+            const teamSetup = document.getElementById('teamSetupBlock');
+            if (briefWait && briefWait.style.display !== 'none') {
+                briefWait.style.display = 'none';
+                if (teamSetup) {
+                    teamSetup.style.display = 'block';
+                    teamSetup.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+                showSystemNotification('המנחה פתח את הבחירה!', 'עכשיו בחרו את קבוצת העניין שלכם.', false);
+            }
+        } else {
+            managerApproved = false;
+            if (btn) {
+                btn.disabled = true;
+                btn.className = 'btn btn-secondary';
+                btn.style.opacity = '0.6';
+                btn.style.cursor = 'not-allowed';
+                btn.innerText = '⏳ ממתינים לאישור המנהל...';
+            }
+            if (note) note.style.display = 'none';
+        }
     }
 
     function setOnlineModeIndicator() {
-        // מצב דמו: אין פאנל מנהל שמציג סטטוס ענן — הפעולה אינה נדרשת
+        const dot = document.getElementById('cloudSyncDot');
+        const text = document.getElementById('cloudSyncText');
+        if (!dot || !text) return;
+        dot.style.background = '#2ecc71';
+        dot.classList.add('dot-pulsing');
+        text.innerText = '⚡ ענן כיתתי פעיל (זמן אמת)';
     }
 
     function setOfflineModeIndicator() {
-        // מצב דמו: עובדים תמיד באופן מקומי/עצמאי, ללא תלות בפאנל מנהל
+        const dot = document.getElementById('cloudSyncDot');
+        const text = document.getElementById('cloudSyncText');
+        if (!dot || !text) return;
+        dot.style.background = '#94a3b8';
+        dot.classList.remove('dot-pulsing');
+        text.innerText = '💾 עבודה מקומית (מחשב זה בלבד)';
         applyGateState(true);
         applySimulatorToolState(true);
     }
 
-    // מצב דמו: אין פאנל מנהל/לוח מטה שצריך לעדכן בזמן אמת, כך שמאזין זה אינו נדרש
+    // מאזין בזמן אמת לשינויים בענן
     function startLiveCloudSyncListener() {
-        // no-op בגרסת הדמו — המשתתף היחיד אינו זקוק לסנכרון חוצה-צוותים
+        if (!currentUser || !db) {
+            console.warn("⚠️ Listener not started — no user or db", { currentUser: !!currentUser, db: !!db });
+            return;
+        }
+        
+        const q = collection(db, 'artifacts', appId, 'public', 'data', 'results');
+        console.log("👂 Starting real-time listener on:", `artifacts/${appId}/public/data/results`);
+        
+        if (firebaseUnsubscribe) firebaseUnsubscribe();
+
+        firebaseUnsubscribe = onSnapshot(q, (snapshot) => {
+            console.log(`📥 Firebase update received: ${snapshot.size} team(s) in cloud`);
+            const activeDocIds = new Set();
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                activeDocIds.add(String(data.teamId));
+                localStorage.setItem(`qc_result_team_${data.teamId}`, JSON.stringify(data));
+                console.log(`   ✓ Team ${data.teamId} (${data.name}) synced`);
+            });
+
+            for (let i = 1; i <= 8; i++) {
+                if (!activeDocIds.has(String(i))) {
+                    localStorage.removeItem(`qc_result_team_${i}`);
+                }
+            }
+
+            const adminOpen = document.getElementById('adminContentView').style.display === 'block';
+            console.log(`   → Admin panel open: ${adminOpen} → ${adminOpen ? 'refreshing dashboard' : 'data cached'}`);
+            if (adminOpen) {
+                renderHqDashboardGrid();
+            }
+            refreshAdminDatabaseStats();
+        }, (error) => {
+            console.error("❌ Cloud synchronization error:", error.code, error.message);
+        });
     }
 
     // מערכת התראות חלקה פנימית ללא alert
@@ -3109,68 +3796,40 @@ window.toggleFaqItem = function(element) {
     element.classList.toggle('open');
 }
 
-    // ניווט ומעברי מסכים — מצב דמו: אין שער מנהל, המעבר פתוח תמיד
-    window.markGuidelinesDone = function() { guidelinesCompleted = true; };
+    // ניווט ומעברי מסכים
+    window.markGuidelinesDone = function() { /* כניסה מתאפשרת רק באישור המנהל */ };
 
     function switchActiveTab(tabId) {
+        // שער: כניסה לעמדת העבודה רק לאחר אישור המנהל (סמכות סופית)
+        if (tabId === 'team_station' && !managerApproved) {
+            showSystemNotification("ממתינים לאישור המנהל", "הכניסה לעמדת העבודה תיפתח רק לאחר שהמנהל יאשר. בינתיים עברו על ההנחיות.", true);
+            document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
+            document.getElementById('guidelines_panel').classList.add('active');
+            return;
+        }
+
+        // שער: הסימולטור נפתח רק לאחר שהמנהל פתח גישה
+        if (tabId === 'simulator' && !simulatorToolUnlocked) {
+            showSystemNotification("הסימולטור נעול", "גישה לסימולטור בקרת האיכות תיפתח לאחר שהמנהל יאשר זאת בפאנל הניהול.", true);
+            return;
+        }
+
         document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
         document.getElementById(`${tabId}_panel`).classList.add('active');
-
+        
         if (tabId === 'team_station') {
             adjustTeamDropdownOptions();
-        }
-
-        updateDemoGuide(tabId);
-    }
-
-    // 🧭 מנחה וירטואלי: מעדכן את הפס הקבוע + מציג טוסט הכוונה בכל מעבר שלב משמעותי
-    function updateDemoGuide(tabId) {
-        const banner = document.getElementById('demoGuideBanner');
-        const titleEl = document.getElementById('demoGuideTitle');
-        const textEl = document.getElementById('demoGuideText');
-        if (!banner || !titleEl || !textEl) return;
-
-        const GUIDE = {
-            welcome: {
-                title: '👋 ברוכים הבאים',
-                text: 'זהו מצב דמו עצמאי — אתם משחקים לבד, בקצב שלכם. לחצו על "התחילו מהנחיות המשחק" כדי להתחיל.',
-                toast: null
-            },
-            guidelines: {
-                title: '📚 שלב 1 — קראו את ההנחיות',
-                text: 'עברו על ההנחיות עד הסוף, ולאחר מכן לחצו על "🚀 הבנתי, התחל סימולציה" כדי לעבור לעמדת העבודה.',
-                toast: { title: 'שלב ההנחיות', body: 'קראו את ההנחיות בעיון. בסיומן תוכלו להמשיך בעצמכם לעמדת העבודה.' }
-            },
-            team_station: {
-                title: '👥 שלב 2 — בחרו קבוצה ובנו אסטרטגיה',
-                text: 'בחרו קבוצת עניין, בנו אסטרטגיית איכות, והגישו את ההחלטה כדי להתחיל את המשמרת (3 דקות, אירוע כל דקה).',
-                toast: { title: 'עמדת העבודה', body: 'בחרו קבוצת עניין מהרשימה כדי להתחיל לבנות את האסטרטגיה שלכם.' }
-            },
-            simulator: {
-                title: '🔬 סימולטור בקרת איכות',
-                text: 'זהו תרגול נפרד לבקרת איכות סטטיסטית (SPC). תוכלו לחזור לעמדת העבודה בכל שלב דרך התפריט.',
-                toast: { title: 'סימולטור בקרת איכות', body: 'תרגלו כאן את עקרונות בקרת האיכות הסטטיסטית.' }
+        } else if (tabId === 'admin_control') {
+            refreshAdminDatabaseStats();
+            if (document.getElementById('adminContentView').style.display === 'block') {
+                renderHqDashboardGrid();
             }
-        };
-
-        const g = GUIDE[tabId];
-        if (!g) { banner.style.display = 'none'; return; }
-
-        titleEl.innerText = g.title;
-        textEl.innerText = g.text;
-        banner.style.display = 'block';
-
-        if (g.toast && tabId !== lastGuidedTab) {
-            showSystemNotification(g.toast.title, g.toast.body);
         }
-        lastGuidedTab = tabId;
     }
-    let lastGuidedTab = null;
-    let guidelinesCompleted = false;
 
     // יצירה דינמית של כרטיסי קבוצות העניין עם האייקונים בעמדת הסטודנט
     function adjustTeamDropdownOptions() {
-        const count = DEMO_CONFIG.teamCount;
+        const count = parseInt(document.getElementById('teamCountConfigInput').value);
         const grid = document.getElementById('teamsSelectionVisualGrid');
         if (!grid) return;
         
@@ -3360,19 +4019,32 @@ window.toggleFaqItem = function(element) {
         document.getElementById('teamGameplayBlock').style.display = 'none';
         document.getElementById('teamFinishedPanel').style.display = 'none';
         document.getElementById('activePlayingTeamTitle').innerText = `${profile.icon} חדר מצב - ${teamState.name}`;
+        const wtnEl = document.getElementById('waitingTeamNameDisplay');
+        if (wtnEl) wtnEl.textContent = `${profile.icon} ${teamState.name}`;
 
         renderTeamKPIBars();
 
-        // סנכרון אופציונלי לענן (לא חוסם) — בכל מקרה הצוות מפעיל בעצמו את המשמרת
+        // סנכרון לענן בסטטוס 'נעול' — ממתין שהמנחה יפעיל
         teamState.shiftStarted = false;
         syncTeamToCloud('locked');
 
-        // מצב דמו: תמיד התחלה עצמאית — אין המתנה למנחה
-        document.getElementById('waitingOnlineMsg').style.display = 'none';
-        document.getElementById('waitingOfflineStart').style.display = 'block';
+        // מצב מקוון: ממתינים למנחה. מצב לא מקוון: מציגים כפתור התחלה ידנית לצוות
+        if (currentUser && db) {
+            document.getElementById('waitingOnlineMsg').style.display = 'block';
+            document.getElementById('waitingOfflineStart').style.display = 'none';
+            startTeamSelfListener();
+        // שמירת הבריפינג עם teamId אחרי בחירת הצוות
+        if (typeof saveBriefingWithTeamId === 'function') {
+            saveBriefingWithTeamId(teamState.teamId);
+        }
+        } else {
+            console.warn("⚠️ מצב לא מקוון — הצוות יפעיל את המשמרת ידנית");
+            document.getElementById('waitingOnlineMsg').style.display = 'none';
+            document.getElementById('waitingOfflineStart').style.display = 'block';
+        }
     }
 
-    // הפעלת המשמרת בפועל — מצב דמו: הצוות לוחץ "התחל משמרת" בעצמו
+    // הפעלת המשמרת בפועל — נקראת כשהמנחה לוחץ "הפעל משמרת" (דרך הענן)
     // התחלה ידנית של הצוות (מצב לא מקוון בלבד)
     function manualStartShift() {
         if (!teamState || teamState.shiftStarted) return;
@@ -3399,8 +4071,10 @@ window.toggleFaqItem = function(element) {
         gameTimeSeconds = 0;
         if(gameTimerInterval) clearInterval(gameTimerInterval);
 
-        // קריאת משך המשמרת: ערך קבוע במצב דמו (אין מנהל שמגדיר זאת)
-        const durMin = DEMO_CONFIG.gameDurationMinutes;
+        // קריאת משך המשחק: מהענן (הגדרת המנחה הגלובלית) אם קיימת, אחרת מהשדה המקומי
+        const durMin = (typeof sharedGameDurationMinutes === 'number' && sharedGameDurationMinutes > 0)
+            ? sharedGameDurationMinutes
+            : (parseInt(document.getElementById('gameDurationConfigInput').value) || 10);
         gameTotalSeconds = durMin * 60;
 
         syncTeamToCloud('active');
@@ -3534,11 +4208,11 @@ window.toggleFaqItem = function(element) {
         return a;
     }
 
-    // בונה את לוח האירועים של הצוות הנוכחי — ערכים קבועים במצב דמו (אין מנהל שמגדיר זאת)
+    // בונה את לוח האירועים של הצוות הנוכחי לפי הגדרות המנהל
     let scheduledTeamEvents = [];
     function buildTeamEventSchedule() {
-        const intervalMin = DEMO_CONFIG.eventIntervalMinutes;
-        let count = DEMO_CONFIG.eventCount;
+        const intervalMin = parseFloat(document.getElementById('eventIntervalConfigInput').value) || 3;
+        let count = parseInt(document.getElementById('eventCountConfigInput').value) || 3;
 
         // ערבוב בנק האירועים של הצוות — כל הרצה מקבלת שילוב/סדר שונה מתוך הבנק
         const pool = shuffleArray(TEAM_EVENTS[teamState.teamId] || []);
@@ -3957,40 +4631,22 @@ window.toggleFaqItem = function(element) {
             `;
         });
 
-        // הודעה לפי הסבב + כפתור המשך עצמאי לסבב הבא (מצב דמו)
+        // הודעה לפי הסבב
         const roundMsg = document.getElementById('finishRoundMsg');
         if (roundMsg) {
             if (currentRound === 1) {
-                roundMsg.innerHTML = '🔵 סיימתם את <strong>סבב 1 (למידה)</strong>! מומלץ לעצור רגע ולחשוב: מה הייתם משפרים? כשתהיו מוכנים, המשיכו לסבב 2.';
-            } else if (currentRound === 2) {
-                roundMsg.innerHTML = '🟢 סיימתם את <strong>סבב 2 (שיפור)</strong>! השוו את התוצאות לסבב 1 — האם השתפרתם? בסבב הבא תתרגלו ניהול בעלי עניין.';
+                roundMsg.innerHTML = '🔵 סיימתם את <strong>סבב 1 (למידה)</strong>. בהמשך, לאחר הדיון הכיתתי, המנהל יעביר אתכם לסבב 2 — שם תוכלו לשפר את האסטרטגיה.';
             } else {
-                roundMsg.innerHTML = '🤝 סיימתם את <strong>כל שלושת הסבבים</strong>! כל הכבוד על השלמת הסימולציה כולה.';
-            }
-        }
-
-        const nextBtnContainer = document.getElementById('roundAdvanceContainer');
-        if (nextBtnContainer) {
-            if (currentRound === 1) {
-                nextBtnContainer.innerHTML = '<button class="btn btn-primary" style="font-size:1.1rem; padding:12px 30px;" onclick="advanceToNextRound(2)">➡️ המשך לסבב 2 — שיפור</button>';
-            } else if (currentRound === 2) {
-                nextBtnContainer.innerHTML = '<button class="btn" style="background:var(--purple-holder); color:white; font-size:1.1rem; padding:12px 30px;" onclick="advanceToNextRound(3)">➡️ המשך לסבב 3 — ניהול בעלי עניין</button>';
-            } else {
-                nextBtnContainer.innerHTML = '<div style="color:#16a34a; font-weight:bold;">🏁 סיימתם את כל הסבבים בהצלחה!</div>';
+                roundMsg.innerHTML = '🟢 סיימתם את <strong>סבב 2 (שיפור)</strong>! השוו את התוצאות לסבב 1 — האם השתפרתם?';
             }
         }
     }
 
-    // 🧭 מצב דמו: המשתתף עצמו מתקדם לסבב הבא בלחיצת כפתור (במקום המתנה למנהל)
-    window.advanceToNextRound = function(round) {
-        applyRoundState(round);
-        resetTeamViewToSetup();
-        showSystemNotification("מעבר לסבב חדש", `עברתם לסבב ${round}. בהצלחה!`);
-        switchActiveTab('team_station');
-    };
-
     function resetTeamViewToSetup() {
-        document.getElementById('teamSetupBlock').style.display = 'block';
+        const _bwait = document.getElementById('briefingWaitBlock');
+        const _bblock = document.getElementById('briefingBlock');
+        const _briefingDone = (!_bblock || _bblock.style.display === 'none') && (!_bwait || _bwait.style.display === 'none');
+        document.getElementById('teamSetupBlock').style.display = _briefingDone ? 'block' : 'none';
         document.getElementById('teamGameplayBlock').style.display = 'none';
         document.getElementById('teamFinishedPanel').style.display = 'none';
         document.getElementById('integratedStrategyPanel').style.display = 'none';
@@ -4424,10 +5080,13 @@ window.toggleFaqItem = function(element) {
                 activeCrisis = null;
                 if(gameTimerInterval) clearInterval(gameTimerInterval);
 
-                document.getElementById('teamSetupBlock').style.display = 'block';
+                document.getElementById('briefingBlock').style.display = 'block';
+                document.getElementById('briefingWaitBlock').style.display = 'none';
+                document.getElementById('teamSetupBlock').style.display = 'none';
                 document.getElementById('teamGameplayBlock').style.display = 'none';
                 document.getElementById('teamFinishedPanel').style.display = 'none';
                 document.getElementById('integratedStrategyPanel').style.display = 'none';
+                localStorage.removeItem('qc_briefing_temp');
                 
                 showSystemNotification("איפוס בוצע", "בוצע איפוס קשיח בהצלחה! הנתונים נמחקו והמערכת מוכנה לסבב חדש בכל הכיתה.");
                 lockAdminPanel();
@@ -4549,6 +5208,145 @@ window.toggleFaqItem = function(element) {
     }
 
     // קישור פונקציות לחלון הגלובלי
+
+    // ===== 📝 BRIEFING — תוכנית הבראה לפני בחירת תפקיד =====
+    const BRIEF_KEYS = ['crm','drivers','cyber','iso','maintenance'];
+    const BRIEF_NAMES = { crm:'CRM', drivers:'הכשרת נהגים', cyber:'אבטחת מידע', iso:'ISO 9001', maintenance:'תחזוקה מונעת' };
+
+    function briefBudgetChange(key, delta) {
+        const el = document.getElementById('bbudget-' + key);
+        if (!el) return;
+        let v = parseInt(el.value || 0) + delta;
+        el.value = Math.max(0, Math.min(100, v));
+        briefBudgetUpdate();
+    }
+
+    function briefBudgetUpdate() {
+        const total = BRIEF_KEYS.reduce((s, k) => s + (parseInt(document.getElementById('bbudget-' + k)?.value) || 0), 0);
+        const el = document.getElementById('briefBudgetTotal');
+        const warn = document.getElementById('briefBudgetWarn');
+        const ok   = document.getElementById('briefBudgetOk');
+        if (el) el.textContent = total;
+        if (warn) warn.style.display = total > 100 ? 'inline' : 'none';
+        if (ok)   ok.style.display   = total === 100 ? 'inline' : 'none';
+        if (el) el.style.color = total > 100 ? 'var(--red-danger)' : total === 100 ? 'var(--green-success)' : 'var(--dark-blue)';
+    }
+
+    async function submitBriefing() {
+        const rootCause   = document.getElementById('briefRootCause')?.value.trim();
+        const kpi1n = document.getElementById('briefKpi1Name')?.value.trim();
+        const kpi1t = document.getElementById('briefKpi1Target')?.value.trim();
+        const kpi2n = document.getElementById('briefKpi2Name')?.value.trim();
+        const kpi2t = document.getElementById('briefKpi2Target')?.value.trim();
+        const kpi3n = document.getElementById('briefKpi3Name')?.value.trim();
+        const kpi3t = document.getElementById('briefKpi3Target')?.value.trim();
+        const rationale   = document.getElementById('briefBudgetRationale')?.value.trim();
+        const teamNames   = document.getElementById('briefTeamNames')?.value.trim();
+
+        if (!rootCause)          { showSystemNotification('שדה חסר', 'אנא מלאו את ניתוח סיבות השורש.', true); return; }
+        if (!kpi1n || !kpi2n || !kpi3n) { showSystemNotification('שדה חסר', 'אנא הגדירו שם לכל 3 מדדי ה-KPI.', true); return; }
+        if (!rationale)          { showSystemNotification('שדה חסר', 'אנא נמקו את חלוקת התקציב.', true); return; }
+        if (!teamNames)          { showSystemNotification('שדה חסר', 'אנא הזינו את שמות המשתתפים.', true); return; }
+
+        const total = BRIEF_KEYS.reduce((s, k) => s + (parseInt(document.getElementById('bbudget-' + k)?.value) || 0), 0);
+        if (total !== 100) { showSystemNotification('סכום שגוי', 'סכום הנקודות חייב להיות בדיוק 100. כרגע: ' + total, true); return; }
+
+        const budget = {};
+        BRIEF_KEYS.forEach(k => { budget[k] = parseInt(document.getElementById('bbudget-' + k)?.value) || 0; });
+
+        const data = {
+            teamNames,
+            rootCause,
+            kpis: [
+                { name: kpi1n, target: kpi1t },
+                { name: kpi2n, target: kpi2t },
+                { name: kpi3n, target: kpi3t },
+            ],
+            budget,
+            rationale,
+            submittedAt: Date.now()
+        };
+
+        // שמירה מקומית (משמשת גם לזיהוי אחרי בחירת תפקיד)
+        localStorage.setItem('qc_briefing_temp', JSON.stringify(data));
+
+        // שמירה ל-Firebase תחת briefings (מפתח זמני — יעודכן אחרי בחירת תפקיד)
+        if (currentUser && db) {
+            try {
+                const tempKey = 'pending_' + Date.now();
+                const ref = doc(db, 'artifacts', appId, 'public', 'data', 'briefings', tempKey);
+                await setDoc(ref, { ...data, teamId: null, status: 'pending' });
+            } catch(e) { console.warn('briefing cloud save failed', e); }
+        }
+
+        // הצגת אישור ומעבר לבחירת תפקיד
+        const btn = document.getElementById('briefingSubmitBtn');
+        const msg = document.getElementById('briefingSubmittedMsg');
+        if (btn) btn.style.display = 'none';
+        if (msg) msg.style.display = 'block';
+
+        setTimeout(() => {
+            document.getElementById('briefingBlock').style.display = 'none';
+            document.getElementById('briefingWaitBlock').style.display = 'block';
+            document.getElementById('teamSetupBlock').style.display = 'none';
+        }, 1800);
+    }
+
+    // שמירת briefing עם teamId אחרי בחירת קבוצה
+    async function saveBriefingWithTeamId(teamId) {
+        const raw = localStorage.getItem('qc_briefing_temp');
+        if (!raw) return;
+        try {
+            const data = JSON.parse(raw);
+            data.teamId = teamId;
+            data.status = 'submitted';
+            localStorage.setItem('qc_briefing_' + teamId, JSON.stringify(data));
+            if (currentUser && db) {
+                const ref = doc(db, 'artifacts', appId, 'public', 'data', 'briefings', String(teamId));
+                await setDoc(ref, data);
+                console.log('✅ Briefing saved for team', teamId);
+            }
+        } catch(e) { console.warn('saveBriefingWithTeamId failed', e); }
+    }
+
+    // רינדור טבלת בריפינג בפאנל המנהל
+    async function renderBriefingTable() {
+        const tbody = document.getElementById('briefingDebriefTableBody');
+        if (!tbody) return;
+        if (!currentUser || !db) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:20px;">לא מחובר לענן</td></tr>';
+            return;
+        }
+        try {
+            const snap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'briefings'));
+            const rows = [];
+            snap.forEach(d => { const r = d.data(); if (r.status === 'submitted') rows.push(r); });
+            if (rows.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:20px;">טרם הוגשו תוכניות בריפינג...</td></tr>';
+                return;
+            }
+            rows.sort((a,b) => (a.teamId||0) - (b.teamId||0));
+            tbody.innerHTML = rows.map(r => {
+                const kpiText = (r.kpis || []).map((k,i) => `<strong>${i+1}.</strong> ${k.name}${k.target ? ' <span style="color:#666">('+k.target+')</span>' : ''}`).join('<br>');
+                const budgetText = Object.entries(r.budget || {}).map(([k,v]) => `<span style="display:inline-block;background:#dbeafe;border-radius:5px;padding:2px 7px;margin:2px;font-size:0.78rem;">${BRIEF_NAMES[k]||k}: <strong>${v}</strong></span>`).join('');
+                const teamLabel = r.teamId ? `צוות ${r.teamId}` : '—';
+                return `<tr>
+                    <td style="font-weight:700;text-align:center;">${teamLabel}<br><span style="font-size:0.78rem;color:#666;">${r.teamNames||''}</span></td>
+                    <td style="font-size:0.85rem;">${r.rootCause||'—'}</td>
+                    <td style="font-size:0.85rem;">${kpiText}</td>
+                    <td>${budgetText}</td>
+                    <td style="font-size:0.82rem;color:#555;">${r.rationale||'—'}</td>
+                </tr>`;
+            }).join('');
+        } catch(e) {
+            tbody.innerHTML = '<tr><td colspan="5" style="color:red;padding:16px;">שגיאה בטעינת נתונים: ' + e.message + '</td></tr>';
+        }
+    }
+    window.renderBriefingTable = renderBriefingTable;
+    window.briefBudgetChange   = briefBudgetChange;
+    window.briefBudgetUpdate   = briefBudgetUpdate;
+    window.submitBriefing      = submitBriefing;
+
     window.switchActiveTab = switchActiveTab;
     window.facilitatorStartTeam = facilitatorStartTeam;
     window.facilitatorForceFinishTeam = facilitatorForceFinishTeam;
@@ -4666,8 +5464,13 @@ window.toggleFaqItem = function(element) {
     // טעינת Firebase ברקע (לא חוסם את ממשק המשתמש)
     loadFirebaseAndInit();
 
-    // 🧭 מצב דמו: הצגת המנחה הוירטואלי כבר במסך הפתיחה
-    updateDemoGuide('welcome');
+    function resetPresentationFromAdmin() {
+        if (!confirm('⚠️ האם לאפס את מצגת התוצאות?\nכל דפי העבודה שהתקבלו יימחקו.')) return;
+        presClear();
+        showSystemNotification('✅ המצגת אופסה', 'כל דפי העבודה נמחקו בהצלחה');
+    }
+
+    window.resetPresentationFromAdmin = resetPresentationFromAdmin;
 
 
 </script>
@@ -4835,7 +5638,6 @@ window.toggleFaqItem = function(element) {
             const data = {
                 teamName: teamName,
                 memberNames: teamName,
-                cityName: document.getElementById('simCityName').value.trim(),
                 paretoAnalysis: document.getElementById('simParetoAnalysis').value.trim(),
                 conclusions: document.getElementById('simConclusions').value.trim(),
                 investments: document.getElementById('simInvestPlain').value,
@@ -4860,7 +5662,75 @@ window.toggleFaqItem = function(element) {
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', simInit);
         } else { simInit(); }
+
+        // ===== מצגת התוצאות =====
+        function presRender(items) {
+            const box = document.getElementById('presContent');
+            const countEl = document.getElementById('presCount');
+            if (!box) return;
+            countEl.innerText = items.length + ' צוותים';
+
+            if (!items.length) {
+                box.innerHTML = `<div style="text-align:center; padding:60px 20px; color:#888;">
+                    <div style="font-size:3rem;">📭</div>
+                    <p style="font-size:1.1rem; margin-top:10px;">עדיין לא התקבלו דפי עבודה. הם יופיעו כאן ברגע שצוותים ישלחו.</p></div>`;
+                return;
+            }
+
+            box.innerHTML = items.map(d => {
+                const img = (src, alt) => src ? `<img src="${src}" alt="${alt}" style="width:100%; border:1px solid #e2e8f0; border-radius:8px;">` : '<div style="color:#aaa; padding:20px; text-align:center;">אין גרף</div>';
+                return `
+                <div class="sim-card" style="margin-bottom:24px; border-top:4px solid #7c3aed;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                        <h3 style="border:none; margin:0;">🚕 ${d.teamName || 'צוות'} ${d.cityName ? '— ' + d.cityName : ''}</h3>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <span style="background:#eef2ff; color:#3730a3; padding:4px 12px; border-radius:14px; font-size:0.85rem;">ממוצע: ${d.avg1} ← ${d.avg2} דק'</span>
+                            <span style="background:#fef2f2; color:#991b1b; padding:4px 12px; border-radius:14px; font-size:0.85rem;">חריגות: ${d.out1} ← ${d.out2}</span>
+                            <span style="background:#f0fdf4; color:#166534; padding:4px 12px; border-radius:14px; font-size:0.85rem;">נבלמו: ${d.mitigated}</span>
+                        </div>
+                    </div>
+                    ${d.memberNames ? `<p style="margin:6px 0 0; font-size:0.85rem; color:#666;">👥 משתתפים: ${d.memberNames}</p>` : ''}
+                    <p style="margin:10px 0; font-size:0.92rem;"><strong>השקעות מנע:</strong> ${d.investments || '—'}</p>
+                    <div class="sim-grid2" style="margin-top:12px;">
+                        <div>
+                            <p style="font-weight:bold; color:var(--slate); font-size:0.9rem;">📉 בקרה סבב 1</p>
+                            ${img(d.imgControl1, 'control1')}
+                            <p style="font-weight:bold; color:var(--slate); font-size:0.9rem; margin-top:10px;">📈 פארטו סבב 1</p>
+                            ${img(d.imgPareto1, 'pareto1')}
+                        </div>
+                        <div>
+                            <p style="font-weight:bold; color:var(--slate); font-size:0.9rem;">📉 בקרה סבב 2 (אחרי שיפור)</p>
+                            ${img(d.imgControl2, 'control2')}
+                        </div>
+                    </div>
+                    <div style="margin-top:14px; background:#f8fafc; border-radius:8px; padding:12px;">
+                        <p style="font-size:0.9rem;"><strong>🔍 ניתוח פארטו:</strong> ${d.paretoAnalysis || '—'}</p>
+                        <p style="font-size:0.9rem; margin-top:8px;"><strong>🎯 מסקנות ניהוליות:</strong> ${d.conclusions || '—'}</p>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        window.presClear = async function() {
+            if (!confirm('לנקות את כל דפי העבודה שהתקבלו? פעולה זו בלתי הפיכה.')) return;
+            if (typeof window.qcClearWorksheets === 'function') {
+                await window.qcClearWorksheets();
+                presRender([]);
+            }
+        };
+
+        // הפעלת האזנה למצגת (ממתין שה-Firebase ייטען)
+        function presStartListener(attempt) {
+            attempt = attempt || 0;
+            if (typeof window.qcListenWorksheets === 'function') {
+                const ok = window.qcListenWorksheets(presRender);
+                if (ok) { console.log('🖥️ Presentation listener active'); return; }
+            }
+            if (attempt < 20) setTimeout(() => presStartListener(attempt + 1), 1000);
+        }
+        presStartListener();
     })();
+    let teacherUnlocked = false;
 
     // ניווט ב-Wizard ההנחיות
     window.wizGo = function(step) {
@@ -4875,6 +5745,38 @@ window.toggleFaqItem = function(element) {
         const top = document.getElementById('guidelines_top');
         if (top) top.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
+
+    function unlockTeacherMenu() {
+
+        if (teacherUnlocked) {
+            const menu = document.getElementById("teacherMenu");
+
+            menu.style.display =
+                menu.style.display === "block"
+                    ? "none"
+                    : "block";
+
+            return;
+        }
+
+        const password =
+            prompt("הזן סיסמת מרצה");
+
+        if (password === "1234") {
+
+            teacherUnlocked = true;
+
+            document.getElementById("teacherMenu")
+                .style.display = "block";
+
+            alert("✅ גישה אושרה — תפריט המרצה נפתח בהצלחה");
+
+        } else {
+
+            alert("❌ גישה נדחתה — סיסמה שגויה");
+
+        }
+    }
 </script>
 
 </body>
