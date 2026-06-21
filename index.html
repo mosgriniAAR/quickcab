@@ -2752,6 +2752,7 @@
                     <h3 style="color: #166534; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">📝 דוח בריפינג — תוכניות הבראה של הצוותות (לפני בחירת תפקיד)</h3>
                     <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">ניתוח סיבות שורש, מדדי KPI שהצוותות הגדירו, וחלוקת תקציב ההבראה — לפני שנכנסו למשחק.</p>
                     <button class="btn btn-secondary" style="margin-bottom:12px; font-size:0.85rem;" onclick="renderBriefingTable()">🔄 רענן</button>
+                    <button class="btn btn-danger" style="margin-bottom:12px; margin-right:8px; font-size:0.85rem;" onclick="clearBriefingTable()">🗑️ נקה דוח בריפינג</button>
                     <table class="sim-table" style="width: 100%; min-width: 1100px;">
                         <thead>
                             <tr>
@@ -5343,6 +5344,26 @@ window.toggleFaqItem = function(element) {
         }
     }
     window.renderBriefingTable = renderBriefingTable;
+
+    async function clearBriefingTable() {
+        if (!currentUser || !db) {
+            showSystemNotification('שגיאה', 'לא מחובר לענן.', true);
+            return;
+        }
+        if (!confirm('למחוק את כל נתוני הבריפינג? פעולה זו אינה הפיכה.')) return;
+        try {
+            const snap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'briefings'));
+            const deletes = [];
+            snap.forEach(d => deletes.push(deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'briefings', d.id))));
+            await Promise.all(deletes);
+            showSystemNotification('נמחק ✅', `${deletes.length} רשומות בריפינג נמחקו בהצלחה.`);
+            renderBriefingTable();
+        } catch(e) {
+            showSystemNotification('שגיאה', 'מחיקה נכשלה: ' + e.message, true);
+        }
+    }
+    window.clearBriefingTable = clearBriefingTable;
+
     window.briefBudgetChange   = briefBudgetChange;
     window.briefBudgetUpdate   = briefBudgetUpdate;
     window.submitBriefing      = submitBriefing;
